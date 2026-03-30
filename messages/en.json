@@ -199,7 +199,7 @@
   },
   "footer": {
     "rights": "© 2026 LMS. Educational project.",
-    "tag": "3-tier • REST • SQLite",
+    "tag": "3-tier • REST • PostgreSQL",
     "about": "Distance learning platform for web application development.",
     "skillsTitle": "Skills",
     "skills1": "HTML & semantics",

@@ -199,7 +199,7 @@
   },
   "footer": {
     "rights": "© 2026 LMS. Учебный проект.",
-    "tag": "3 уровня • REST • SQLite",
+    "tag": "3 уровня • REST • PostgreSQL",
     "about": "Платформа для заочного изучения веб-разработки.",
     "skillsTitle": "Навыки",
     "skills1": "HTML и семантика",
