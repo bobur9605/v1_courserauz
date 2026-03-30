@@ -25,13 +25,40 @@ function loadDotEnv() {
 
 loadDotEnv();
 
+function isPostgresUrl(u) {
+  return !!u && /^postgres(ql)?:\/\//i.test(u.trim());
+}
+
+/** localhost / loopback — works on your PC, never on Vercel's builders */
+function pointsToLocalHost(u) {
+  if (!u) return false;
+  const lower = u.toLowerCase();
+  return (
+    lower.includes("localhost") ||
+    lower.includes("127.0.0.1") ||
+    lower.includes("@0.0.0.0:") ||
+    /\/\/127\./.test(lower)
+  );
+}
+
 /**
  * Vercel Postgres / Neon often expose POSTGRES_URL or POSTGRES_PRISMA_URL.
  * Prisma expects DATABASE_URL=postgresql://... or postgres://...
  */
 function normalize() {
-  const current = process.env.DATABASE_URL?.trim();
-  if (current && /^postgres(ql)?:\/\//i.test(current)) {
+  const onVercel = process.env.VERCEL === "1";
+  let current = process.env.DATABASE_URL?.trim();
+
+  if (onVercel && isPostgresUrl(current) && pointsToLocalHost(current)) {
+    console.warn(
+      "[build] DATABASE_URL uses localhost — Vercel cannot reach your laptop. " +
+        "Ignoring it and using POSTGRES_PRISMA_URL / POSTGRES_URL if present.\n",
+    );
+    delete process.env.DATABASE_URL;
+    current = undefined;
+  }
+
+  if (isPostgresUrl(current) && (!onVercel || !pointsToLocalHost(current))) {
     return;
   }
 
@@ -44,7 +71,7 @@ function normalize() {
 
   for (const c of candidates) {
     const v = c?.trim();
-    if (v && /^postgres(ql)?:\/\//i.test(v)) {
+    if (v && isPostgresUrl(v) && (!onVercel || !pointsToLocalHost(v))) {
       process.env.DATABASE_URL = v;
       return;
     }
