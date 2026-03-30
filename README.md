@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LMS — “Veb ilovalarni yaratish” learning platform
 
-## Getting Started
+Next.js 16 app with **Coursera-style UI**, **Uzbek / English / Russian**, **Prisma + PostgreSQL**, Monaco code labs, and student / instructor roles.
 
-First, run the development server:
+## Prerequisites
+
+- Node.js 20+
+- PostgreSQL (local Docker, install, or a cloud database)
+
+## Local setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Edit `.env`:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **`DATABASE_URL`** — point at your Postgres database (create an empty DB, e.g. `lms`, first).
+2. **`JWT_SECRET`** — generate a random secret (do not use the sample from old tutorials):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+   ```
 
-## Learn More
+   Paste the output into `.env` as `JWT_SECRET=...` **without** quotes.
 
-To learn more about Next.js, take a look at the following resources:
+Then:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm install
+npx prisma migrate deploy
+npx prisma db seed
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000).
+
+**Demo logins** (after seed):
+
+| Role     | Email              | Password   |
+|----------|--------------------|------------|
+| Teacher  | `teacher@lms.uz`   | `demo1234` |
+| Student  | `student@lms.uz`   | `demo1234` |
+
+## Environment variables
+
+| Variable         | Required | Description |
+|------------------|----------|-------------|
+| `DATABASE_URL`   | Yes      | `postgresql://` or `postgres://` URL. |
+| `JWT_SECRET`     | Yes      | Long random string for signing sessions. |
+| `POSTGRES_URL`   | Optional | On Vercel, set automatically with Vercel Postgres; build scripts may map it to `DATABASE_URL`. |
+
+### Common mistakes
+
+- **Never** use `localhost` in `DATABASE_URL` on Vercel — the cloud cannot reach your laptop. Use **Vercel Postgres**, **Neon**, **Supabase**, or similar.
+- In the Vercel dashboard, paste **`JWT_SECRET` without** surrounding `"` characters, or the quotes become part of the secret and logins break.
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Push this repo to GitHub and **Import** the project in Vercel.
+2. Create **Vercel → Storage → Postgres** (or use Neon) and **connect** it to the project.
+3. Under **Settings → Environment Variables** (Production / Preview):
+   - Set **`JWT_SECRET`** to a **new** value from the `node -e ...` command above (never reuse your local `.env` in production if the repo is public).
+   - Either leave **`DATABASE_URL`** unset if Vercel injects `POSTGRES_PRISMA_URL` / `POSTGRES_URL`, **or** set **`DATABASE_URL`** to the **hosted** connection string (host is **not** `localhost`).
+   - **Delete** any old `DATABASE_URL` that still points to `localhost`.
+4. Redeploy. After the first successful deploy, **seed** the production DB once (from your machine with production `DATABASE_URL`, or Vercel CLI):
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   ```bash
+   npx prisma db seed
+   ```
+
+## Scripts
+
+| Command              | Purpose                          |
+|----------------------|----------------------------------|
+| `npm run dev`        | Development server               |
+| `npm run build`      | Production build (runs Prisma migrate + Next build) |
+| `npm run db:migrate` | `prisma migrate deploy`          |
+| `npm run db:seed`    | Seed demo data                   |
+
+## Tech stack
+
+- Next.js (App Router), TypeScript, Tailwind CSS, next-intl  
+- Prisma ORM, PostgreSQL  
+- Monaco Editor, jose (JWT), bcryptjs  
+
+## License
+
+Educational / individual project use.
