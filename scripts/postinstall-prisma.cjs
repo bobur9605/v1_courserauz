@@ -12,4 +12,17 @@ if (!url || !/^postgres(ql)?:\/\//i.test(url)) {
   process.exit(0);
 }
 
+if (!process.env.DIRECT_URL?.trim()) {
+  console.warn(
+    "[prisma] Skipping postinstall `prisma generate`: DIRECT_URL is missing.",
+  );
+  console.warn(
+    "[prisma] With Supabase pooler (6543 / pooler host): set DIRECT_URL to the Dashboard → Direct connection URI (5432).",
+  );
+  console.warn(
+    "[prisma] Or omit DATABASE_URL during install; Vercel build will run `prisma generate` with full env.",
+  );
+  process.exit(0);
+}
+
 execSync("prisma generate", { stdio: "inherit", env: process.env, shell: true });

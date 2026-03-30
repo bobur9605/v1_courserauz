@@ -47,8 +47,13 @@ Open [http://localhost:3000](http://localhost:3000).
 | Variable         | Required | Description |
 |------------------|----------|-------------|
 | `DATABASE_URL`   | Yes      | `postgresql://` or `postgres://` URL. |
+| `DIRECT_URL`     | Yes\*    | Prisma migrations use this. Usually the same as `DATABASE_URL`; build scripts set it automatically when you are **not** on a pooler. |
 | `JWT_SECRET`     | Yes      | Long random string for signing sessions. |
 | `POSTGRES_URL`   | Optional | On Vercel, set automatically with Vercel Postgres; build scripts may map it to `DATABASE_URL`. |
+| `DATABASE_URL_UNPOOLED` | Optional | Neon / some hosts: non-pooled URL for migrations; build maps it to `DIRECT_URL` when `DATABASE_URL` is pooled. |
+| `POSTGRES_URL_NON_POOLING` | Optional | Same idea as above (Vercel Postgres naming). |
+
+\* **Supabase transaction pooler** (`pooler.supabase.com`, port `6543`, or `pgbouncer=true`): keep `DATABASE_URL` as the pooler URL for the app, and add **`DIRECT_URL`** with Supabase’s **Database → Connection string → Direct connection** (port `5432`). Migrations cannot run reliably through the transaction pooler alone. **Neon** often sets `DATABASE_URL_UNPOOLED` automatically — no extra manual `DIRECT_URL` in that case.
 
 ### Common mistakes
 
@@ -62,6 +67,7 @@ Open [http://localhost:3000](http://localhost:3000).
 3. Under **Settings → Environment Variables** (Production / Preview):
    - Set **`JWT_SECRET`** to a **new** value from the `node -e ...` command above (never reuse your local `.env` in production if the repo is public).
    - Either leave **`DATABASE_URL`** unset if Vercel injects `POSTGRES_PRISMA_URL` / `POSTGRES_URL`, **or** set **`DATABASE_URL`** to the **hosted** connection string (host is **not** `localhost`).
+   - With **Supabase pooler** in `DATABASE_URL`, add **`DIRECT_URL`** (direct `5432` URI from the Supabase dashboard) so `prisma migrate deploy` can run on Vercel.
    - **Delete** any old `DATABASE_URL` that still points to `localhost`.
 4. Redeploy. After the first successful deploy, **seed** the production DB once (from your machine with production `DATABASE_URL`, or Vercel CLI):
 

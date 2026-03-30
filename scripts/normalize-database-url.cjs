@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { isPostgresUrl, isLikelyPooledOrBouncer } = require("./db-url-helpers.cjs");
 
 /** Load `.env` for local `npm run build` (Vercel injects env vars itself). */
 function loadDotEnv() {
@@ -24,10 +25,6 @@ function loadDotEnv() {
 }
 
 loadDotEnv();
-
-function isPostgresUrl(u) {
-  return !!u && /^postgres(ql)?:\/\//i.test(u.trim());
-}
 
 /** localhost / loopback — works on your PC, never on Vercel's builders */
 function pointsToLocalHost(u) {
@@ -73,9 +70,34 @@ function normalize() {
     const v = c?.trim();
     if (v && isPostgresUrl(v) && (!onVercel || !pointsToLocalHost(v))) {
       process.env.DATABASE_URL = v;
-      return;
+      break;
     }
   }
 }
 
+/**
+ * Prisma migrate uses DIRECT_URL.
+ * - Normal / session URLs: mirror DATABASE_URL.
+ * - Pooled URL: prefer Neon/Vercel-style unpooled vars, else require DIRECT_URL in env (Supabase dashboard).
+ */
+function ensureDirectUrl() {
+  const db = process.env.DATABASE_URL?.trim();
+  if (!db) return;
+
+  if (process.env.DIRECT_URL?.trim()) return;
+
+  if (isLikelyPooledOrBouncer(db)) {
+    const unpooled =
+      process.env.DATABASE_URL_UNPOOLED?.trim() ||
+      process.env.POSTGRES_URL_NON_POOLING?.trim();
+    if (unpooled && isPostgresUrl(unpooled)) {
+      process.env.DIRECT_URL = unpooled;
+    }
+    return;
+  }
+
+  process.env.DIRECT_URL = db;
+}
+
 normalize();
+ensureDirectUrl();

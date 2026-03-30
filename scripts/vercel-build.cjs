@@ -1,4 +1,6 @@
 const { execSync } = require("child_process");
+const { isLikelyPooledOrBouncer, isPostgresUrl } = require("./db-url-helpers.cjs");
+
 require("./normalize-database-url.cjs");
 
 const url = process.env.DATABASE_URL?.trim();
@@ -34,6 +36,28 @@ if (process.env.VERCEL === "1") {
     );
     process.exit(1);
   }
+}
+
+const pooled = isLikelyPooledOrBouncer(url);
+const direct = process.env.DIRECT_URL?.trim();
+if (pooled && (!direct || !isPostgresUrl(direct))) {
+  console.error(
+    "\n[x] DATABASE_URL uses a pooler / PgBouncer — migrations need a direct (non-pooled) connection.\n",
+  );
+  console.error(
+    "    • Neon on Vercel: ensure DATABASE_URL_UNPOOLED or POSTGRES_URL_NON_POOLING is set (integration often adds it).\n",
+  );
+  console.error(
+    "    • Supabase: Database → Connection string → **Direct connection** (port 5432) as DIRECT_URL in Vercel.\n",
+  );
+  process.exit(1);
+}
+
+if (!process.env.DIRECT_URL?.trim()) {
+  console.error(
+    "\n[x] DIRECT_URL is missing. It should match DATABASE_URL unless you use a pooler (then use Supabase direct URI).\n",
+  );
+  process.exit(1);
 }
 
 execSync("prisma generate && prisma migrate deploy && next build", {
