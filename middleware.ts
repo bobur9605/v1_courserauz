@@ -39,7 +39,8 @@ export default async function middleware(req: NextRequest) {
       return NextResponse.redirect(url);
     }
     if (!process.env.JWT_SECRET) {
-      return intl(req);
+      url.pathname = loginPath;
+      return NextResponse.redirect(url);
     }
     try {
       const { payload } = await jwtVerify(

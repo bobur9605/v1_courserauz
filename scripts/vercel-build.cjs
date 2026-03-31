@@ -48,6 +48,14 @@ if (onVercel) {
   }
 }
 
+if (onVercel && !process.env.JWT_SECRET?.trim()) {
+  console.error("\n[x] JWT_SECRET is missing.\n");
+  console.error(
+    "    Set JWT_SECRET in Vercel → Project → Settings → Environment Variables.\n",
+  );
+  process.exit(1);
+}
+
 const pooled = isLikelyPooledOrBouncer(url);
 const direct = process.env.DIRECT_URL?.trim();
 if (shouldRunMigrations && pooled && (!direct || !isPostgresUrl(direct))) {
