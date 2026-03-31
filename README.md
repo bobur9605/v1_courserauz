@@ -53,7 +53,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `POSTGRES_URL`   | Optional | On Vercel, set automatically with Vercel Postgres; build scripts may map it to `DATABASE_URL`. |
 | `DATABASE_URL_UNPOOLED` | Optional | Neon / some hosts: non-pooled URL for migrations; build maps it to `DIRECT_URL` when `DATABASE_URL` is pooled. |
 | `POSTGRES_URL_NON_POOLING` | Optional | Same idea as above (Vercel Postgres naming). |
-| `RUN_PRISMA_MIGRATIONS` | Optional | `1`/unset runs `prisma migrate deploy` during `npm run build` on Vercel. Set to `0`/`false`/`no` to skip. |
+| `RUN_PRISMA_MIGRATIONS` | Optional | Local/non-Vercel only: set to `1` to include `prisma migrate deploy` in build. On Vercel, migrations run automatically. |
 
 \* **Supabase transaction pooler** (`pooler.supabase.com`, port `6543`, or `pgbouncer=true`): keep `DATABASE_URL` as the pooler URL for the app, and add **`DIRECT_URL`** with Supabase’s **Database → Connection string → Direct connection** (port `5432`). Migrations cannot run reliably through the transaction pooler alone. **Neon** often sets `DATABASE_URL_UNPOOLED` automatically — no extra manual `DIRECT_URL` in that case.
 
@@ -70,8 +70,8 @@ Open [http://localhost:3000](http://localhost:3000).
    - Set **`JWT_SECRET`** to a **new** value from the `node -e ...` command above (never reuse your local `.env` in production if the repo is public).
    - Either leave **`DATABASE_URL`** unset if Vercel injects `POSTGRES_PRISMA_URL` / `POSTGRES_URL`, **or** set **`DATABASE_URL`** to the **hosted** connection string (host is **not** `localhost`).
    - With **Supabase pooler** in `DATABASE_URL`, add **`DIRECT_URL`** (direct `5432` URI from the Supabase dashboard) so `prisma migrate deploy` can run on Vercel.
-   - **Recommended:** keep **`RUN_PRISMA_MIGRATIONS`** unset so deploy applies migrations automatically on Vercel.
-   - Set **`RUN_PRISMA_MIGRATIONS=0`** only if you intentionally handle migrations outside Vercel builds.
+   - On Vercel, migrations are applied automatically during build.
+   - `RUN_PRISMA_MIGRATIONS` only affects local/non-Vercel builds.
    - **Delete** any old `DATABASE_URL` that still points to `localhost`.
 4. Redeploy. After the first successful deploy, **seed** the production DB once (from your machine with production `DATABASE_URL`, or Vercel CLI):
 
