@@ -4,8 +4,16 @@ const { isLikelyPooledOrBouncer, isPostgresUrl } = require("./db-url-helpers.cjs
 require("./normalize-database-url.cjs");
 const onVercel = process.env.VERCEL === "1";
 const runMigrationsEnv = (process.env.RUN_PRISMA_MIGRATIONS || "").toLowerCase();
-const shouldRunMigrations =
-  runMigrationsEnv === "1" || runMigrationsEnv === "true" || runMigrationsEnv === "yes";
+const shouldRunMigrations = (() => {
+  if (runMigrationsEnv === "0" || runMigrationsEnv === "false" || runMigrationsEnv === "no") {
+    return false;
+  }
+  if (runMigrationsEnv === "1" || runMigrationsEnv === "true" || runMigrationsEnv === "yes") {
+    return true;
+  }
+  // Default: run migrations on Vercel to avoid runtime "table does not exist" errors.
+  return onVercel;
+})();
 
 const url = process.env.DATABASE_URL?.trim();
 if (!url || !/^postgres(ql)?:\/\//i.test(url)) {
@@ -66,7 +74,7 @@ if (shouldRunMigrations && !process.env.DIRECT_URL?.trim()) {
 
 if (!shouldRunMigrations) {
   console.warn(
-    "\n[build] Skipping `prisma migrate deploy` during build. Set RUN_PRISMA_MIGRATIONS=1 to enable it.\n",
+    "\n[build] Skipping `prisma migrate deploy` during build. Set RUN_PRISMA_MIGRATIONS=1 to force-enable it.\n",
   );
 }
 
