@@ -1,6 +1,6 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link, redirect } from "@/i18n/routing";
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -15,23 +15,60 @@ export default async function AdminPage() {
   const t = await getTranslations("admin");
   const tf = await getTranslations("form");
   const tc = await getTranslations("courses");
+  const supabase = createAdminClient();
 
-  const [courses, results] = await Promise.all([
-    prisma.course.findMany({
-      orderBy: { createdAt: "desc" },
-      include: { _count: { select: { assignments: true } } },
-    }),
-    prisma.result.findMany({
-      orderBy: { updatedAt: "desc" },
-      take: 30,
-      include: {
-        student: { select: { fullName: true, email: true } },
-        assignment: {
-          select: { title: true, course: { select: { title: true } } },
-        },
+  const { data: coursesRaw } = await supabase
+    .from("Course")
+    .select("*")
+    .order("createdAt", { ascending: false });
+  const courses = coursesRaw ?? [];
+  const { data: allAssignments } = await supabase
+    .from("Assignment")
+    .select("courseId");
+  const countByCourse = new Map<string, number>();
+  for (const a of allAssignments ?? []) {
+    countByCourse.set(a.courseId, (countByCourse.get(a.courseId) ?? 0) + 1);
+  }
+
+  const { data: results } = await supabase
+    .from("Result")
+    .select("*")
+    .order("updatedAt", { ascending: false })
+    .limit(30);
+
+  const resultRows = results ?? [];
+  const studentIds = [...new Set(resultRows.map((r) => r.studentId))];
+  const assignmentIds = [...new Set(resultRows.map((r) => r.assignmentId))];
+  const { data: usersRaw } = studentIds.length
+    ? await supabase
+        .from("User")
+        .select("id, fullName, email")
+        .in("id", studentIds)
+    : { data: [] };
+  const users = usersRaw ?? [];
+  const { data: asgnsRaw } = assignmentIds.length
+    ? await supabase
+        .from("Assignment")
+        .select("id, title, courseId")
+        .in("id", assignmentIds)
+    : { data: [] };
+  const asgns = asgnsRaw ?? [];
+  const courseIds = [...new Set(asgns.map((a) => a.courseId))];
+  const { data: resultCoursesRaw } = courseIds.length
+    ? await supabase.from("Course").select("id, title").in("id", courseIds)
+    : { data: [] };
+  const coursesForResults = resultCoursesRaw ?? [];
+  const userById = Object.fromEntries(users.map((u) => [u.id, u]));
+  const courseById = Object.fromEntries(coursesForResults.map((c) => [c.id, c]));
+  const asgnById = Object.fromEntries(
+    asgns.map((a) => [
+      a.id,
+      {
+        title: a.title,
+        course: { title: courseById[a.courseId]?.title ?? "" },
       },
-    }),
-  ]);
+    ]),
+  );
 
   return (
     <div className="space-y-10">
@@ -69,7 +106,7 @@ export default async function AdminPage() {
               <div>
                 <p className="font-semibold text-[#1c1d1f]">{c.title}</p>
                 <p className="text-xs text-[#6a6f73]">
-                  {c._count.assignments} {t("assignments").toLowerCase()}
+                  {countByCourse.get(c.id) ?? 0} {t("assignments").toLowerCase()}
                 </p>
               </div>
               <Link
@@ -98,16 +135,19 @@ export default async function AdminPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#e0e0e0]">
-              {results.map((r) => (
+              {resultRows.map((r) => (
                 <tr key={r.id} className="hover:bg-[#fafafa]">
                   <td className="px-6 py-3">
                     <div className="font-medium text-[#1c1d1f]">
-                      {r.student.fullName}
+                      {userById[r.studentId]?.fullName ?? ""}
                     </div>
-                    <div className="text-xs text-[#6a6f73]">{r.student.email}</div>
+                    <div className="text-xs text-[#6a6f73]">
+                      {userById[r.studentId]?.email ?? ""}
+                    </div>
                   </td>
                   <td className="px-6 py-3 text-[#6a6f73]">
-                    {r.assignment.course.title} — {r.assignment.title}
+                    {asgnById[r.assignmentId]?.course.title ?? ""} —{" "}
+                    {asgnById[r.assignmentId]?.title ?? ""}
                   </td>
                   <td className="px-6 py-3">{r.score ?? "—"}</td>
                   <td className="px-6 py-3 text-[#6a6f73]">{r.feedback || "—"}</td>

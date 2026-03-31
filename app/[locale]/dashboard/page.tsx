@@ -1,5 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server";
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { redirect } from "@/i18n/routing";
 
@@ -14,16 +14,35 @@ export default async function DashboardPage() {
 
   const userId = session.sub;
   const t = await getTranslations("dashboard");
+  const supabase = createAdminClient();
 
-  const rows = await prisma.result.findMany({
-    where: { studentId: userId },
-    orderBy: { updatedAt: "desc" },
-    include: {
-      assignment: {
-        select: { title: true, course: { select: { title: true } } },
-      },
-    },
-  });
+  const { data: rowsRaw } = await supabase
+    .from("Result")
+    .select("*")
+    .eq("studentId", userId)
+    .order("updatedAt", { ascending: false });
+  const rows = rowsRaw ?? [];
+
+  const assignmentIds = [...new Set(rows.map((r) => r.assignmentId))];
+  const { data: asgnsRaw } = assignmentIds.length
+    ? await supabase
+        .from("Assignment")
+        .select("id, title, courseId")
+        .in("id", assignmentIds)
+    : { data: [] };
+  const asgns = asgnsRaw ?? [];
+  const courseIds = [...new Set(asgns.map((a) => a.courseId))];
+  const { data: coursesRaw } = courseIds.length
+    ? await supabase.from("Course").select("id, title").in("id", courseIds)
+    : { data: [] };
+  const courses = coursesRaw ?? [];
+  const courseById = Object.fromEntries(courses.map((c) => [c.id, c]));
+  const asgnById = Object.fromEntries(
+    asgns.map((a) => [
+      a.id,
+      { title: a.title, courseTitle: courseById[a.courseId]?.title ?? "" },
+    ]),
+  );
 
   return (
     <div className="space-y-6">
@@ -55,10 +74,10 @@ export default async function DashboardPage() {
                 {rows.map((r) => (
                   <tr key={r.id} className="hover:bg-[#fafafa]">
                     <td className="px-6 py-3 font-medium text-[#1c1d1f]">
-                      {r.assignment.course.title}
+                      {asgnById[r.assignmentId]?.courseTitle ?? ""}
                     </td>
                     <td className="px-6 py-3 text-[#6a6f73]">
-                      {r.assignment.title}
+                      {asgnById[r.assignmentId]?.title ?? ""}
                     </td>
                     <td className="px-6 py-3">{r.score ?? "—"}</td>
                     <td className="px-6 py-3">

@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -12,12 +12,21 @@ export default async function CoursesPage(props: PageProps) {
   const search = q?.trim().toLowerCase() ?? "";
   const t = await getTranslations("courses");
   const session = await getSession();
+  const supabase = createAdminClient();
 
-  const allCourses = await prisma.course.findMany({
-    orderBy: { createdAt: "asc" },
-    include: { assignments: { select: { id: true } } },
-  });
-
+  const { data: allCoursesRaw } = await supabase
+    .from("Course")
+    .select("*")
+    .order("createdAt", { ascending: true });
+  const allCourses = allCoursesRaw ?? [];
+  const { data: assignmentRowsRaw } = await supabase
+    .from("Assignment")
+    .select("id, courseId");
+  const assignmentRows = assignmentRowsRaw ?? [];
+  const countByCourse = new Map<string, number>();
+  for (const a of assignmentRows) {
+    countByCourse.set(a.courseId, (countByCourse.get(a.courseId) ?? 0) + 1);
+  }
   const courses = search
     ? allCourses.filter(
         (c) =>
@@ -26,13 +35,14 @@ export default async function CoursesPage(props: PageProps) {
       )
     : allCourses;
 
-  const enrolled = session
-    ? await prisma.enrollment.findMany({
-        where: { userId: session.sub },
-        select: { courseId: true },
-      })
-    : [];
-  const enrolledSet = new Set(enrolled.map((e) => e.courseId));
+  let enrolledSet = new Set<string>();
+  if (session) {
+    const { data: enrolled } = await supabase
+      .from("Enrollment")
+      .select("courseId")
+      .eq("userId", session.sub);
+    enrolledSet = new Set((enrolled ?? []).map((e) => e.courseId));
+  }
 
   function levelLabel(key: string) {
     if (key === "beginner") return t("beginner");
@@ -88,7 +98,7 @@ export default async function CoursesPage(props: PageProps) {
               </div>
               <div className="flex items-center justify-between border-t border-[#e0e0e0] px-5 py-3">
                 <span className="text-xs text-[#6a6f73]">
-                  {c.assignments.length} tasks
+                  {countByCourse.get(c.id) ?? 0} tasks
                 </span>
                 <Link
                   href={`/courses/${c.id}`}

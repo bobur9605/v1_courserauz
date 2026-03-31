@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
+import { newId } from "@/lib/ids";
 
 const schema = z.object({ courseId: z.string().min(1) });
 
@@ -12,13 +13,24 @@ export async function POST(req: Request) {
   }
   try {
     const { courseId } = schema.parse(await req.json());
-    await prisma.enrollment.upsert({
-      where: {
-        userId_courseId: { userId: session.sub, courseId },
-      },
-      create: { userId: session.sub, courseId },
-      update: {},
+    const supabase = createAdminClient();
+    const { data: existing } = await supabase
+      .from("Enrollment")
+      .select("id")
+      .eq("userId", session.sub)
+      .eq("courseId", courseId)
+      .maybeSingle();
+    if (existing) {
+      return NextResponse.json({ ok: true });
+    }
+    const { error } = await supabase.from("Enrollment").insert({
+      id: newId(),
+      userId: session.sub,
+      courseId,
     });
+    if (error) {
+      return NextResponse.json({ error: "bad_request" }, { status: 400 });
+    }
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });

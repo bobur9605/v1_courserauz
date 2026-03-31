@@ -1,19 +1,25 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: Request, ctx: Ctx) {
   const { id } = await ctx.params;
-  const row = await prisma.assignment.findUnique({
-    where: { id },
-    include: { course: true },
-  });
-
-  if (!row) {
+  const supabase = createAdminClient();
+  const { data: row, error } = await supabase
+    .from("Assignment")
+    .select("id, title, instructions, starterCode, expectedOutput, courseId")
+    .eq("id", id)
+    .maybeSingle();
+  if (error || !row) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
+  const { data: course } = await supabase
+    .from("Course")
+    .select("title")
+    .eq("id", row.courseId)
+    .maybeSingle();
 
   const session = await getSession();
   let result = null as null | {
@@ -24,14 +30,12 @@ export async function GET(_req: Request, ctx: Ctx) {
   };
 
   if (session) {
-    const r = await prisma.result.findUnique({
-      where: {
-        studentId_assignmentId: {
-          studentId: session.sub,
-          assignmentId: id,
-        },
-      },
-    });
+    const { data: r } = await supabase
+      .from("Result")
+      .select("score, feedback, passed, submittedCode")
+      .eq("studentId", session.sub)
+      .eq("assignmentId", id)
+      .maybeSingle();
     if (r) {
       result = {
         score: r.score,
@@ -49,7 +53,7 @@ export async function GET(_req: Request, ctx: Ctx) {
     starterCode: row.starterCode,
     expectedOutput: row.expectedOutput,
     courseId: row.courseId,
-    courseTitle: row.course.title,
+    courseTitle: course?.title ?? "",
     result,
   });
 }

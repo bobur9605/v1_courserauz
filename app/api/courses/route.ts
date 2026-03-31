@@ -1,25 +1,34 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
+import { newId } from "@/lib/ids";
 
 export async function GET() {
   const session = await getSession();
-  const courses = await prisma.course.findMany({
-    orderBy: { createdAt: "asc" },
-    include: {
-      assignments: { select: { id: true } },
-      _count: { select: { enrollments: true } },
-    },
-  });
+  const supabase = createAdminClient();
+  const { data: courses, error: cErr } = await supabase
+    .from("Course")
+    .select("*")
+    .order("createdAt", { ascending: true });
+  if (cErr || !courses) {
+    return NextResponse.json([], { status: 200 });
+  }
+  const { data: assignments } = await supabase
+    .from("Assignment")
+    .select("id, courseId");
+  const byCourse = new Map<string, number>();
+  for (const a of assignments ?? []) {
+    byCourse.set(a.courseId, (byCourse.get(a.courseId) ?? 0) + 1);
+  }
 
   let enrolledIds: string[] = [];
   if (session) {
-    const en = await prisma.enrollment.findMany({
-      where: { userId: session.sub },
-      select: { courseId: true },
-    });
-    enrolledIds = en.map((e) => e.courseId);
+    const { data: en } = await supabase
+      .from("Enrollment")
+      .select("courseId")
+      .eq("userId", session.sub);
+    enrolledIds = (en ?? []).map((e) => e.courseId);
   }
 
   return NextResponse.json(
@@ -29,7 +38,7 @@ export async function GET() {
       description: c.description,
       durationHours: c.durationHours,
       difficultyLevel: c.difficultyLevel,
-      assignmentCount: c.assignments.length,
+      assignmentCount: byCourse.get(c.id) ?? 0,
       enrolled: enrolledIds.includes(c.id),
     })),
   );
@@ -49,7 +58,21 @@ export async function POST(req: Request) {
   }
   try {
     const body = createSchema.parse(await req.json());
-    const course = await prisma.course.create({ data: body });
+    const supabase = createAdminClient();
+    const { data: course, error } = await supabase
+      .from("Course")
+      .insert({
+        id: newId(),
+        title: body.title,
+        description: body.description,
+        durationHours: body.durationHours,
+        difficultyLevel: body.difficultyLevel,
+      })
+      .select("*")
+      .single();
+    if (error || !course) {
+      return NextResponse.json({ error: "bad_request" }, { status: 400 });
+    }
     return NextResponse.json(course);
   } catch {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });

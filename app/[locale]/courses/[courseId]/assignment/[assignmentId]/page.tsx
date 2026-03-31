@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { AssignmentWorkspace } from "@/components/AssignmentWorkspace";
 
@@ -14,24 +14,34 @@ type Props = {
 export default async function AssignmentPage(props: Props) {
   const { courseId, assignmentId } = await props.params;
   const t = await getTranslations("assignment");
+  const supabase = createAdminClient();
 
-  const row = await prisma.assignment.findFirst({
-    where: { id: assignmentId, courseId },
-    include: { course: true },
-  });
-  if (!row) notFound();
+  const { data: row, error } = await supabase
+    .from("Assignment")
+    .select(
+      "id, title, instructions, starterCode, expectedOutput, courseId",
+    )
+    .eq("id", assignmentId)
+    .eq("courseId", courseId)
+    .maybeSingle();
+
+  if (error || !row) notFound();
+
+  const { data: courseRow } = await supabase
+    .from("Course")
+    .select("title")
+    .eq("id", row.courseId)
+    .maybeSingle();
 
   const session = await getSession();
-  const result =
-    session &&
-    (await prisma.result.findUnique({
-      where: {
-        studentId_assignmentId: {
-          studentId: session.sub,
-          assignmentId: row.id,
-        },
-      },
-    }));
+  const { data: result } = session
+    ? await supabase
+        .from("Result")
+        .select("submittedCode, score, passed, feedback")
+        .eq("studentId", session.sub)
+        .eq("assignmentId", row.id)
+        .maybeSingle()
+    : { data: null };
 
   return (
     <div className="space-y-8">
@@ -45,7 +55,7 @@ export default async function AssignmentPage(props: Props) {
         <h1 className="mt-3 text-2xl font-bold text-[#1c1d1f] md:text-3xl">
           {row.title}
         </h1>
-        <p className="mt-2 text-sm text-[#6a6f73]">{row.course.title}</p>
+        <p className="mt-2 text-sm text-[#6a6f73]">{courseRow?.title ?? ""}</p>
       </div>
 
       <section className="rounded-xl border border-[#e0e0e0] bg-white p-6 shadow-sm">

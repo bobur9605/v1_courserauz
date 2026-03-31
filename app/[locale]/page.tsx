@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { HomeFAQ } from "@/components/HomeFAQ";
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -17,13 +17,29 @@ function StarRow({ n }: { n: number }) {
 export default async function HomePage() {
   const t = await getTranslations("home");
 
-  const courses = await prisma.course.findMany({
-    orderBy: { createdAt: "asc" },
-    include: { assignments: true },
-  });
+  const supabase = createAdminClient();
+  const { data: coursesRaw } = await supabase
+    .from("Course")
+    .select("*")
+    .order("createdAt", { ascending: true });
+  const courses = coursesRaw ?? [];
+  const { data: assignmentsRaw } = await supabase
+    .from("Assignment")
+    .select("*");
+  const allAssignments = assignmentsRaw ?? [];
+  const assignmentsByCourse = new Map<string, typeof allAssignments>();
+  for (const a of allAssignments) {
+    const list = assignmentsByCourse.get(a.courseId) ?? [];
+    list.push(a);
+    assignmentsByCourse.set(a.courseId, list);
+  }
+  const coursesWithAssignments = courses.map((c) => ({
+    ...c,
+    assignments: assignmentsByCourse.get(c.id) ?? [],
+  }));
 
-  const trendCols: (typeof courses)[] = [[], [], []];
-  courses.forEach((c, i) => trendCols[i % 3].push(c));
+  const trendCols: (typeof coursesWithAssignments)[] = [[], [], []];
+  coursesWithAssignments.forEach((c, i) => trendCols[i % 3].push(c));
 
   const faqItems = [
     { q: t("faq1q"), a: t("faq1a") },
@@ -242,7 +258,7 @@ export default async function HomePage() {
         </div>
         <div className="relative mt-8 md:mt-0 md:w-[380px]">
           <div className="flex gap-3 overflow-x-auto pb-2 md:justify-end">
-            {courses.slice(0, 4).map((c) => (
+            {coursesWithAssignments.slice(0, 4).map((c) => (
               <Link
                 key={c.id}
                 href={`/courses/${c.id}`}

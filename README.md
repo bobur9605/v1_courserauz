@@ -1,11 +1,20 @@
 # LMS — “Veb ilovalarni yaratish” learning platform
 
-Next.js 16 app with **Coursera-style UI**, **Uzbek / English / Russian**, **Prisma + PostgreSQL**, Monaco code labs, and student / instructor roles.
+Next.js app with **Coursera-style UI**, **Uzbek / English / Russian**, Monaco code labs, and student / instructor roles. Data is stored in **Supabase Postgres** via **`@supabase/supabase-js`** (no Prisma).
 
 ## Prerequisites
 
 - Node.js 20+
-- PostgreSQL (local Docker, install, or a cloud database)
+- A [Supabase](https://supabase.com) project
+
+## Supabase setup
+
+1. Create a project → **Project Settings → SQL Editor** (or **Database → Migrations**).
+2. Run the SQL in `supabase/migrations/20260331000000_init.sql` once if tables do not exist yet.
+3. Copy **Project Settings → API**:
+   - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
+   - **anon public** → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - **service_role** → `SUPABASE_SERVICE_ROLE_KEY` (server-only; never commit or expose)
 
 ## Local setup
 
@@ -13,24 +22,11 @@ Next.js 16 app with **Coursera-style UI**, **Uzbek / English / Russian**, **Pris
 cp .env.example .env
 ```
 
-Edit `.env`:
-
-1. **`DATABASE_URL`** — point at your Postgres database (create an empty DB, e.g. `lms`, first).
-2. **`DIRECT_URL`** — set this equal to `DATABASE_URL` for local development.
-3. **`JWT_SECRET`** — generate a random secret (do not use the sample from old tutorials):
-
-   ```bash
-   node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
-   ```
-
-   Paste the output into `.env` as `JWT_SECRET=...` **without** quotes.
-
-Then:
+Edit `.env` with the values above and a strong `JWT_SECRET` (no quotes in production env UIs).
 
 ```bash
 npm install
-npx prisma migrate deploy
-npx prisma db seed
+npm run db:seed
 npm run dev
 ```
 
@@ -43,55 +39,28 @@ Open [http://localhost:3000](http://localhost:3000).
 | Teacher  | `teacher@lms.uz`   | `demo1234` |
 | Student  | `student@lms.uz`   | `demo1234` |
 
-## Environment variables
-
-| Variable         | Required | Description |
-|------------------|----------|-------------|
-| `DATABASE_URL`   | Yes      | `postgresql://` or `postgres://` URL. |
-| `DIRECT_URL`     | Yes\*    | Prisma migrations use this. Usually the same as `DATABASE_URL`; build scripts set it automatically when you are **not** on a pooler. |
-| `JWT_SECRET`     | Yes      | Long random string for signing sessions. |
-| `POSTGRES_URL`   | Optional | On Vercel, set automatically with Vercel Postgres; build scripts may map it to `DATABASE_URL`. |
-| `DATABASE_URL_UNPOOLED` | Optional | Neon / some hosts: non-pooled URL for migrations; build maps it to `DIRECT_URL` when `DATABASE_URL` is pooled. |
-| `POSTGRES_URL_NON_POOLING` | Optional | Same idea as above (Vercel Postgres naming). |
-| `RUN_PRISMA_MIGRATIONS` | Optional | Local/non-Vercel only: set to `1` to include `prisma migrate deploy` in build. On Vercel, migrations run automatically. |
-
-\* **Supabase transaction pooler** (`pooler.supabase.com`, port `6543`, or `pgbouncer=true`): keep `DATABASE_URL` as the pooler URL for the app, and add **`DIRECT_URL`** with Supabase’s **Database → Connection string → Direct connection** (port `5432`). Migrations cannot run reliably through the transaction pooler alone. **Neon** often sets `DATABASE_URL_UNPOOLED` automatically — no extra manual `DIRECT_URL` in that case.
-
-### Common mistakes
-
-- **Never** use `localhost` in `DATABASE_URL` on Vercel — the cloud cannot reach your laptop. Use **Vercel Postgres**, **Neon**, **Supabase**, or similar.
-- In the Vercel dashboard, paste **`JWT_SECRET` without** surrounding `"` characters, or the quotes become part of the secret and logins break.
-
 ## Deploy on Vercel
 
-1. Push this repo to GitHub and **Import** the project in Vercel.
-2. Create **Vercel → Storage → Postgres** (or use Neon) and **connect** it to the project.
-3. Under **Settings → Environment Variables** (Production / Preview):
-   - Set **`JWT_SECRET`** to a **new** value from the `node -e ...` command above (never reuse your local `.env` in production if the repo is public).
-   - Either leave **`DATABASE_URL`** unset if Vercel injects `POSTGRES_PRISMA_URL` / `POSTGRES_URL`, **or** set **`DATABASE_URL`** to the **hosted** connection string (host is **not** `localhost`).
-   - With **Supabase pooler** in `DATABASE_URL`, add **`DIRECT_URL`** (direct `5432` URI from the Supabase dashboard) so `prisma migrate deploy` can run on Vercel.
-   - On Vercel, migrations are applied automatically during build.
-   - `RUN_PRISMA_MIGRATIONS` only affects local/non-Vercel builds.
-   - **Delete** any old `DATABASE_URL` that still points to `localhost`.
-4. Redeploy. After the first successful deploy, **seed** the production DB once (from your machine with production `DATABASE_URL`, or Vercel CLI):
-
-   ```bash
-   npx prisma db seed
-   ```
+1. Import the repo; **Root directory** = `web` if the monorepo contains only `web` as the app.
+2. **Environment variables** (Production + Preview):
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `JWT_SECRET`
+3. Apply the SQL migration in Supabase if the database is new; optionally run `npm run db:seed` locally with production env to load demo data.
 
 ## Scripts
 
-| Command              | Purpose                          |
-|----------------------|----------------------------------|
-| `npm run dev`        | Development server               |
-| `npm run build`      | Production build (`prisma generate + next build`; add `RUN_PRISMA_MIGRATIONS=1` to include migrate) |
-| `npm run db:migrate` | `prisma migrate deploy`          |
-| `npm run db:seed`    | Seed demo data                   |
+| Command           | Purpose                          |
+|-------------------|----------------------------------|
+| `npm run dev`     | Development server               |
+| `npm run build`   | Production build                 |
+| `npm run db:seed` | Seed demo users/courses (local)  |
 
 ## Tech stack
 
 - Next.js (App Router), TypeScript, Tailwind CSS, next-intl  
-- Prisma ORM, PostgreSQL  
+- Supabase (Postgres + REST)  
 - Monaco Editor, jose (JWT), bcryptjs  
 
 ## License

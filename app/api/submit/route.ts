@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { normalizeOutput, runStudentCode } from "@/lib/runner";
+import { newId } from "@/lib/ids";
 
 const schema = z.object({
   assignmentId: z.string().min(1),
@@ -17,10 +18,13 @@ export async function POST(req: Request) {
 
   try {
     const body = schema.parse(await req.json());
-    const assignment = await prisma.assignment.findUnique({
-      where: { id: body.assignmentId },
-    });
-    if (!assignment) {
+    const supabase = createAdminClient();
+    const { data: assignment, error: aErr } = await supabase
+      .from("Assignment")
+      .select("id, expectedOutput")
+      .eq("id", body.assignmentId)
+      .maybeSingle();
+    if (aErr || !assignment) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
 
@@ -29,39 +33,65 @@ export async function POST(req: Request) {
     const got = normalizeOutput(stdout);
     const passed = ok && got === expected;
     const score = passed ? 100 : ok ? 40 : 0;
+    const feedback = passed
+      ? null
+      : error
+        ? `Runtime: ${error}`
+        : `Expected: "${expected}" but got: "${got}"`;
+    const now = new Date().toISOString();
 
-    const record = await prisma.result.upsert({
-      where: {
-        studentId_assignmentId: {
-          studentId: session.sub,
-          assignmentId: assignment.id,
-        },
-      },
-      create: {
+    const { data: prior } = await supabase
+      .from("Result")
+      .select("id")
+      .eq("studentId", session.sub)
+      .eq("assignmentId", assignment.id)
+      .maybeSingle();
+
+    if (prior) {
+      const { data: record, error: uErr } = await supabase
+        .from("Result")
+        .update({
+          submittedCode: body.code,
+          stdout,
+          passed,
+          score,
+          feedback,
+          updatedAt: now,
+        })
+        .eq("id", prior.id)
+        .select("score, feedback")
+        .single();
+      if (uErr || !record) {
+        return NextResponse.json({ error: "bad_request" }, { status: 400 });
+      }
+      return NextResponse.json({
+        passed,
+        score: record.score,
+        stdout,
+        error: error ?? null,
+        feedback: record.feedback,
+      });
+    }
+
+    const { data: record, error: iErr } = await supabase
+      .from("Result")
+      .insert({
+        id: newId(),
         studentId: session.sub,
         assignmentId: assignment.id,
         submittedCode: body.code,
         stdout,
         passed,
         score,
-        feedback: passed
-          ? null
-          : error
-            ? `Runtime: ${error}`
-            : `Expected: "${expected}" but got: "${got}"`,
-      },
-      update: {
-        submittedCode: body.code,
-        stdout,
-        passed,
-        score,
-        feedback: passed
-          ? null
-          : error
-            ? `Runtime: ${error}`
-            : `Expected: "${expected}" but got: "${got}"`,
-      },
-    });
+        feedback,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .select("score, feedback")
+      .single();
+    if (iErr || !record) {
+      return NextResponse.json({ error: "bad_request" }, { status: 400 });
+    }
 
     return NextResponse.json({
       passed,

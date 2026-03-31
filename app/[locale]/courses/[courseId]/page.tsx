@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { EnrollButton } from "@/components/EnrollButton";
 
@@ -14,44 +14,52 @@ export default async function CourseDetailPage(props: Props) {
   const t = await getTranslations("course");
   const tc = await getTranslations("courses");
   const session = await getSession();
+  const supabase = createAdminClient();
 
-  const course = await prisma.course.findUnique({
-    where: { id: courseId },
-    include: {
-      assignments: { orderBy: { order: "asc" }, select: { id: true, title: true, order: true } },
-    },
-  });
-  if (!course) notFound();
+  const { data: course, error } = await supabase
+    .from("Course")
+    .select("*")
+    .eq("id", courseId)
+    .maybeSingle();
+  if (error || !course) notFound();
+
+  const { data: assignmentsRaw } = await supabase
+    .from("Assignment")
+    .select("id, title, order")
+    .eq("courseId", courseId)
+    .order("order", { ascending: true });
+  const assignments = assignmentsRaw ?? [];
 
   let resultsMap: Record<string, { passed: boolean; score: number | null }> =
     {};
   let isEnrolled = false;
 
   if (session) {
-    const [results, en] = await Promise.all([
-      prisma.result.findMany({
-        where: {
-          studentId: session.sub,
-          assignmentId: { in: course.assignments.map((a) => a.id) },
-        },
-      }),
-      prisma.enrollment.findUnique({
-        where: {
-          userId_courseId: { userId: session.sub, courseId: course.id },
-        },
-      }),
-    ]);
-    isEnrolled = !!en;
+    const assignmentIds = assignments.map((a) => a.id);
+    const { data: enRow } = await supabase
+      .from("Enrollment")
+      .select("id")
+      .eq("userId", session.sub)
+      .eq("courseId", course.id)
+      .maybeSingle();
+    isEnrolled = !!enRow;
+    const { data: resultRows } = assignmentIds.length
+      ? await supabase
+          .from("Result")
+          .select("assignmentId, passed, score")
+          .eq("studentId", session.sub)
+          .in("assignmentId", assignmentIds)
+      : { data: [] as { assignmentId: string; passed: boolean; score: number | null }[] };
     resultsMap = Object.fromEntries(
-      results.map((r) => [
+      (resultRows ?? []).map((r) => [
         r.assignmentId,
         { passed: r.passed, score: r.score },
       ]),
     );
   }
 
-  const total = course.assignments.length;
-  const done = course.assignments.filter((a) => resultsMap[a.id]?.passed).length;
+  const total = assignments.length;
+  const done = assignments.filter((a) => resultsMap[a.id]?.passed).length;
   const pct = total ? Math.round((done / total) * 100) : 0;
 
   return (
@@ -96,7 +104,7 @@ export default async function CourseDetailPage(props: Props) {
             {t("modules")}
           </h2>
           <ol className="mt-4 space-y-2">
-            {course.assignments.map((a, i) => {
+            {assignments.map((a, i) => {
               const r = resultsMap[a.id];
               return (
                 <li key={a.id}>
@@ -117,18 +125,18 @@ export default async function CourseDetailPage(props: Props) {
               );
             })}
           </ol>
-          {course.assignments.length === 0 && (
+          {assignments.length === 0 && (
             <p className="mt-2 text-sm text-[#6a6f73]">{t("noAssignments")}</p>
           )}
         </aside>
 
         <div className="space-y-4 rounded-xl border border-[#e0e0e0] bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold text-[#1c1d1f]">{t("modules")}</h2>
-          {course.assignments.length === 0 ? (
+          {assignments.length === 0 ? (
             <p className="text-sm text-[#6a6f73]">{t("noAssignments")}</p>
           ) : (
             <ul className="divide-y divide-[#e0e0e0]">
-              {course.assignments.map((a, i) => (
+              {assignments.map((a, i) => (
                 <li
                   key={a.id}
                   className="flex flex-wrap items-center justify-between gap-3 py-4 first:pt-0 last:pb-0"

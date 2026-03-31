@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { signSession, type Role } from "@/lib/auth";
 
 const schema = z.object({
@@ -12,8 +12,13 @@ const schema = z.object({
 export async function POST(req: Request) {
   try {
     const body = schema.parse(await req.json());
-    const user = await prisma.user.findUnique({ where: { email: body.email } });
-    if (!user) {
+    const supabase = createAdminClient();
+    const { data: user, error } = await supabase
+      .from("User")
+      .select("id, email, fullName, role, passwordHash")
+      .eq("email", body.email)
+      .maybeSingle();
+    if (error || !user) {
       return NextResponse.json({ error: "invalid" }, { status: 401 });
     }
     const ok = await bcrypt.compare(body.password, user.passwordHash);
