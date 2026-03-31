@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { AssignmentWorkspace } from "@/components/AssignmentWorkspace";
 
+export const dynamic = "force-dynamic";
+
 type Props = {
   params: Promise<{ locale: string; courseId: string; assignmentId: string }>;
 };

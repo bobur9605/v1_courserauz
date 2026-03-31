@@ -2,6 +2,10 @@ const { execSync } = require("child_process");
 const { isLikelyPooledOrBouncer, isPostgresUrl } = require("./db-url-helpers.cjs");
 
 require("./normalize-database-url.cjs");
+const onVercel = process.env.VERCEL === "1";
+const runMigrationsEnv = (process.env.RUN_PRISMA_MIGRATIONS || "").toLowerCase();
+const shouldRunMigrations =
+  runMigrationsEnv === "1" || runMigrationsEnv === "true" || runMigrationsEnv === "yes";
 
 const url = process.env.DATABASE_URL?.trim();
 if (!url || !/^postgres(ql)?:\/\//i.test(url)) {
@@ -21,7 +25,7 @@ if (!url || !/^postgres(ql)?:\/\//i.test(url)) {
   process.exit(1);
 }
 
-if (process.env.VERCEL === "1") {
+if (onVercel) {
   const lower = url.toLowerCase();
   if (
     lower.includes("localhost") ||
@@ -40,7 +44,7 @@ if (process.env.VERCEL === "1") {
 
 const pooled = isLikelyPooledOrBouncer(url);
 const direct = process.env.DIRECT_URL?.trim();
-if (pooled && (!direct || !isPostgresUrl(direct))) {
+if (shouldRunMigrations && pooled && (!direct || !isPostgresUrl(direct))) {
   console.error(
     "\n[x] DATABASE_URL uses a pooler / PgBouncer — migrations need a direct (non-pooled) connection.\n",
   );
@@ -53,14 +57,24 @@ if (pooled && (!direct || !isPostgresUrl(direct))) {
   process.exit(1);
 }
 
-if (!process.env.DIRECT_URL?.trim()) {
+if (shouldRunMigrations && !process.env.DIRECT_URL?.trim()) {
   console.error(
     "\n[x] DIRECT_URL is missing. It should match DATABASE_URL unless you use a pooler (then use Supabase direct URI).\n",
   );
   process.exit(1);
 }
 
-execSync("prisma generate && prisma migrate deploy && next build", {
+if (!shouldRunMigrations) {
+  console.warn(
+    "\n[build] Skipping `prisma migrate deploy` during build. Set RUN_PRISMA_MIGRATIONS=1 to enable it.\n",
+  );
+}
+
+const buildCommand = shouldRunMigrations
+  ? "prisma generate && prisma migrate deploy && next build"
+  : "prisma generate && next build";
+
+execSync(buildCommand, {
   stdio: "inherit",
   env: process.env,
   shell: true,

@@ -3,6 +3,8 @@ import { Link } from "@/i18n/routing";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 type PageProps = { searchParams: Promise<{ q?: string }> };
 
 export default async function CoursesPage(props: PageProps) {

@@ -3,6 +3,8 @@ import { Link } from "@/i18n/routing";
 import { HomeFAQ } from "@/components/HomeFAQ";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 function StarRow({ n }: { n: number }) {
   return (
     <span className="flex items-center gap-1 text-xs text-[#b4690e]">

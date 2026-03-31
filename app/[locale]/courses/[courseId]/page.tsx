@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { EnrollButton } from "@/components/EnrollButton";
 
+export const dynamic = "force-dynamic";
+
 type Props = { params: Promise<{ locale: string; courseId: string }> };
 
 export default async function CourseDetailPage(props: Props) {
