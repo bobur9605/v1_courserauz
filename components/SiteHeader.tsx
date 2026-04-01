@@ -2,10 +2,10 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { getSession } from "@/lib/auth";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { LogoutButton } from "@/components/LogoutButton";
 import { UtilityBar } from "@/components/UtilityBar";
 import { ExploreNav } from "@/components/ExploreNav";
 import { HeaderSearch } from "@/components/HeaderSearch";
+import { HeaderUserMenu } from "@/components/HeaderUserMenu";
 
 export async function SiteHeader() {
   const session = await getSession();
@@ -63,10 +63,7 @@ export async function SiteHeader() {
               </>
             ) : (
               <div className="flex items-center gap-3">
-                <span className="hidden max-w-[120px] truncate text-xs font-semibold text-[#6a6f73] lg:inline">
-                  {session.fullName}
-                </span>
-                <LogoutButton variant="coursera" />
+                <HeaderUserMenu fullName={session.fullName} />
               </div>
             )}
           </div>

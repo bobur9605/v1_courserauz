@@ -25,25 +25,24 @@ export function LanguageSwitcher() {
   }
 
   return (
-    <div
-      className="flex items-center gap-0 rounded-full border border-[#e0e0e0] bg-white p-0.5 text-[11px] font-bold shadow-sm"
-      role="group"
-      aria-label="Language"
-    >
-      {LOCALES.map((code) => (
-        <button
-          key={code}
-          type="button"
-          onClick={() => switchTo(code)}
-          className={
-            locale === code
-              ? "rounded-full bg-[#0056d2] px-2 py-1 text-white"
-              : "rounded-full px-2 py-1 text-[#1c1d1f] hover:bg-[#f3f4f6]"
-          }
-        >
-          {labels[code]}
-        </button>
-      ))}
+    <div className="relative">
+      <select
+        value={locale}
+        onChange={(e) => switchTo(e.target.value)}
+        className="min-h-10 appearance-none rounded-md border border-[#d9d9d9] bg-white py-2 pl-3 pr-8 text-xs font-semibold text-[#1c1d1f] shadow-sm outline-none transition hover:border-[#bfc4c9] focus:border-[#0056d2] focus:ring-2 focus:ring-[#0056d2]/20"
+        aria-label="Language"
+      >
+        {LOCALES.map((code) => (
+          <option key={code} value={code}>
+            {labels[code]}
+          </option>
+        ))}
+      </select>
+      <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-[#6a6f73]">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden>
+          <path d="M6 8L1 3h10L6 8z" />
+        </svg>
+      </span>
     </div>
   );
 }
