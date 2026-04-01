@@ -27,8 +27,7 @@ export default function LoginPage() {
       setError(true);
       return;
     }
-    const data = (await res.json()) as { role?: string };
-    router.replace(data.role === "ADMIN" ? "/admin" : "/dashboard");
+    router.replace("/dashboard");
     router.refresh();
   }
 

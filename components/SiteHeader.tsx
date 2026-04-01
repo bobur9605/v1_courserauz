@@ -2,7 +2,6 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { getSession } from "@/lib/auth";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { UtilityBar } from "@/components/UtilityBar";
 import { ExploreNav } from "@/components/ExploreNav";
 import { HeaderSearch } from "@/components/HeaderSearch";
 import { HeaderUserMenu } from "@/components/HeaderUserMenu";
@@ -14,7 +13,6 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 shadow-sm">
-      <UtilityBar />
       <div className="border-b border-[#e0e0e0] bg-white">
         <div className="mx-auto flex max-w-[1344px] flex-wrap items-center gap-x-4 gap-y-3 px-4 py-2.5 lg:flex-nowrap lg:px-6">
           <div className="order-1 flex shrink-0 items-center gap-4 lg:gap-6">
