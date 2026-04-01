@@ -67,7 +67,7 @@ export default async function HomePage() {
           <div className="relative">
             <div className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1 text-xs font-bold text-[#0056d2] shadow-sm ring-1 ring-[#d9e9ff]">
               <span className="rounded bg-[#0056d2] px-2 py-0.5 text-white">
-                LMS
+                WD-EDU
               </span>
               {t("heroBadgeSave")}
             </div>
@@ -204,7 +204,7 @@ export default async function HomePage() {
                         />
                         <div className="min-w-0 flex-1">
                           <p className="text-[11px] font-semibold text-[#6a6f73]">
-                            LMS · {c.durationHours}h
+                            WD-EDU · {c.durationHours}h
                           </p>
                           <p className="line-clamp-2 text-sm font-bold text-[#1c1d1f]">
                             {c.title}
@@ -265,7 +265,7 @@ export default async function HomePage() {
                 className="w-[140px] shrink-0 rounded-xl bg-white p-3 text-[#1c1d1f] shadow-lg"
               >
                 <div className="mb-2 h-16 rounded-lg bg-gradient-to-br from-indigo-200 to-blue-300" />
-                <p className="text-[10px] font-semibold text-[#6a6f73]">LMS</p>
+                <p className="text-[10px] font-semibold text-[#6a6f73]">WD-EDU</p>
                 <p className="line-clamp-2 text-xs font-bold leading-snug">
                   {c.title}
                 </p>

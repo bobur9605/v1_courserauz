@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
-const COOKIE = "lms_session";
+const COOKIE = "wdedu_session";
 
 export type Role = "ADMIN" | "STUDENT";
 const getSecret = () => {

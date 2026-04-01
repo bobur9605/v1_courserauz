@@ -1,4 +1,4 @@
-# LMS — “Veb ilovalarni yaratish” learning platform
+# WD-EDU — “Veb ilovalarni yaratish” learning platform
 
 Next.js app with **Coursera-style UI**, **Uzbek / English / Russian**, Monaco code labs, and student / instructor roles. Data is stored in **Supabase Postgres** via **`@supabase/supabase-js`** (no Prisma).
 
@@ -36,8 +36,8 @@ Open [http://localhost:3000](http://localhost:3000).
 
 | Role     | Email              | Password   |
 |----------|--------------------|------------|
-| Teacher  | `teacher@lms.uz`   | `demo1234` |
-| Student  | `student@lms.uz`   | `demo1234` |
+| Teacher  | `teacher@wdedu.uz` | `demo1234` |
+| Student  | `student@wdedu.uz` | `demo1234` |
 
 ## Deploy on Vercel
 

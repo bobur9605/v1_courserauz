@@ -43,14 +43,14 @@ async function main() {
   const password = await bcrypt.hash("demo1234", 10);
   await ensureUser(
     supabase,
-    "teacher@lms.uz",
+    "teacher@wdedu.uz",
     "Demo O‘qituvchi",
     "ADMIN",
     password,
   );
   const studentId = await ensureUser(
     supabase,
-    "student@lms.uz",
+    "student@wdedu.uz",
     "Demo Talaba",
     "STUDENT",
     password,
@@ -100,9 +100,9 @@ async function main() {
       courseId: htmlId,
       title: "Birinchi HTML sahifa",
       instructions:
-        "console.log yordamida 'Hello LMS' matnini chiqaring. Faqat bitta console.log.",
+        "console.log yordamida 'Hello WD-EDU' matnini chiqaring. Faqat bitta console.log.",
       starterCode: "// Write your code below\n",
-      expectedOutput: "Hello LMS",
+      expectedOutput: "Hello WD-EDU",
       order: 0,
     },
     {
@@ -136,7 +136,7 @@ async function main() {
   ]);
   if (enErr) throw enErr;
 
-  console.log("Seed OK. teacher@lms.uz / student@lms.uz — parol: demo1234");
+  console.log("Seed OK. teacher@wdedu.uz / student@wdedu.uz — parol: demo1234");
 }
 
 main().catch((e) => {

@@ -23,7 +23,7 @@ export default async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
   const bare = pathnameWithoutLocale(pathname);
 
-  const token = req.cookies.get("lms_session")?.value;
+  const token = req.cookies.get("wdedu_session")?.value;
   const needsAuth = PROTECTED_PREFIXES.some((p) => bare.startsWith(p));
   const needsAdmin = ADMIN_PREFIXES.some((p) => bare.startsWith(p));
 
