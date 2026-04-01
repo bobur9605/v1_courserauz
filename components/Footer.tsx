@@ -46,10 +46,10 @@ export async function Footer() {
             { href: "/login", label: t("courses4") },
           ])}
           {col(t("careerTitle"), [
-            { href: "/", label: t("career1") },
-            { href: "/courses", label: t("career2") },
-            { href: "/", label: t("career3") },
-            { href: "/", label: t("career4") },
+            { href: "/about", label: t("career1") },
+            { href: "/resources", label: t("career2") },
+            { href: "/contact", label: t("career3") },
+            { href: "/privacy", label: t("career4") },
           ])}
         </div>
 
@@ -59,8 +59,8 @@ export async function Footer() {
 
         <div className="mt-10 grid gap-8 border-t border-[#e0e0e0] pt-10 sm:grid-cols-3">
           {col(t("bottomBrand"), [
-            { href: "/", label: t("about") },
-            { href: "/courses", label: t("tag") },
+            { href: "/about", label: t("about") },
+            { href: "/resources", label: t("tag") },
           ])}
           {col(t("bottomCommunity"), [
             { href: "/register", label: t("community1") },
@@ -68,10 +68,10 @@ export async function Footer() {
             { href: "/courses", label: t("community3") },
           ])}
           {col(t("bottomMore"), [
-            { href: "/", label: t("more1") },
-            { href: "/", label: t("more2") },
-            { href: "/", label: t("more3") },
-            { href: "/", label: t("more4") },
+            { href: "/terms", label: t("more1") },
+            { href: "/privacy", label: t("more2") },
+            { href: "/cookies", label: t("more3") },
+            { href: "/support", label: t("more4") },
           ])}
         </div>
 
