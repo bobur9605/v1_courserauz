@@ -12,9 +12,10 @@ export function HeaderSearch() {
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const query = q.trim();
-    router.push(
-      query ? `/courses?q=${encodeURIComponent(query)}` : "/courses",
-    );
+    router.push({
+      pathname: "/courses",
+      query: query ? { q: query } : {},
+    });
   }
 
   return (
