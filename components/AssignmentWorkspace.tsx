@@ -109,27 +109,34 @@ export function AssignmentWorkspace({
   }, [assignmentId, code, router, t]);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <div className="flex flex-col gap-2">
-        <h2 className="text-lg font-bold text-[#1c1d1f]">{t("editor")}</h2>
-        <p className="text-sm text-[#6a6f73]">{t("consoleHint")}</p>
-        <div className="overflow-hidden rounded-lg border border-[#e0e0e0] bg-white shadow-sm">
-          <div className="h-[420px]">
-            <Monaco
-              height="100%"
-              defaultLanguage="javascript"
-              theme="vs-light"
-              value={code}
-              onChange={(v) => setCode(v ?? "")}
-              options={options}
-            />
+    <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+      <section className="overflow-hidden rounded-xl border border-[#dfe3e8] bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-[#eceff3] bg-[#f9fafb] px-4 py-2.5">
+          <div>
+            <h2 className="text-base font-bold text-[#1c1d1f]">{t("editor")}</h2>
+            <p className="text-xs text-[#6a6f73]">{t("consoleHint")}</p>
           </div>
+          <span className="rounded-md border border-[#d8dee6] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#4b5563]">
+            main.js
+          </span>
         </div>
-        <div className="flex flex-wrap gap-3">
+
+        <div className="h-[500px]">
+          <Monaco
+            height="100%"
+            defaultLanguage="javascript"
+            theme="vs-light"
+            value={code}
+            onChange={(v) => setCode(v ?? "")}
+            options={options}
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 border-t border-[#eceff3] bg-[#fbfcfe] px-4 py-3">
           <button
             type="button"
             onClick={runLocal}
-            className="rounded bg-white px-4 py-2 text-sm font-semibold text-[#0056d2] ring-1 ring-[#0056d2] hover:bg-[#eef5ff]"
+            className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-[#0056d2] ring-1 ring-[#0056d2] transition hover:bg-[#eef5ff]"
           >
             {t("run")}
           </button>
@@ -137,29 +144,37 @@ export function AssignmentWorkspace({
             type="button"
             disabled={busy}
             onClick={() => void submit()}
-            className="rounded bg-[#0056d2] px-4 py-2 text-sm font-semibold text-white shadow hover:bg-[#00419e] disabled:opacity-60"
+            className="rounded-md bg-[#0056d2] px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-[#00419e] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {t("submit")}
           </button>
+          {msg && (
+            <p className="ml-auto text-sm font-medium text-[#0056d2]" role="status">
+              {msg}
+            </p>
+          )}
         </div>
-      </div>
-      <div className="flex flex-col gap-3">
-        <div className="rounded-lg border border-[#e0e0e0] bg-white p-4 shadow-sm">
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <div className="rounded-xl border border-[#dfe3e8] bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#6a6f73]">
             {t("expected")}
           </p>
-          <pre className="mt-2 whitespace-pre-wrap rounded bg-[#f5f7fa] p-3 text-sm">
+          <pre className="mt-2 min-h-[92px] whitespace-pre-wrap rounded-md bg-[#f5f7fa] p-3 text-sm text-[#111827]">
             {expectedOutput}
           </pre>
         </div>
-        <div className="rounded-lg border border-[#e0e0e0] bg-white p-4 shadow-sm">
+
+        <div className="rounded-xl border border-[#dfe3e8] bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#6a6f73]">
             {t("output")}
           </p>
-          <pre className="mt-2 min-h-[120px] whitespace-pre-wrap rounded bg-[#0b1020] p-3 text-sm text-emerald-100">
+          <pre className="mt-2 min-h-[220px] whitespace-pre-wrap rounded-md bg-[#07112a] p-3 text-sm text-emerald-100">
             {output || "—"}
           </pre>
         </div>
+
         {lastPass !== null && (
           <div
             className={`rounded-lg border px-4 py-3 text-sm font-semibold ${
@@ -171,8 +186,9 @@ export function AssignmentWorkspace({
             {lastPass ? t("pass") : t("fail")}
           </div>
         )}
+
         {(existingFeedback || existingScore !== undefined) && (
-          <div className="rounded-lg border border-[#e0e0e0] bg-white p-4 text-sm">
+          <div className="rounded-xl border border-[#dfe3e8] bg-white p-4 text-sm shadow-sm">
             <p className="font-semibold text-[#1c1d1f]">{t("teacherFeedback")}</p>
             <p className="mt-1 text-[#6a6f73]">
               {existingFeedback || "—"}
@@ -180,12 +196,7 @@ export function AssignmentWorkspace({
             </p>
           </div>
         )}
-        {msg && (
-          <p className="text-sm font-medium text-[#0056d2]" role="status">
-            {msg}
-          </p>
-        )}
-      </div>
+      </section>
     </div>
   );
 }
