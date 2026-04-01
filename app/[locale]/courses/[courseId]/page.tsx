@@ -4,13 +4,14 @@ import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { EnrollButton } from "@/components/EnrollButton";
+import { localizeAssignment, localizeCourse } from "@/lib/sampleCurriculumI18n";
 
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ locale: string; courseId: string }> };
 
 export default async function CourseDetailPage(props: Props) {
-  const { courseId } = await props.params;
+  const { courseId, locale } = await props.params;
   const t = await getTranslations("course");
   const tc = await getTranslations("courses");
   const session = await getSession();
@@ -28,7 +29,10 @@ export default async function CourseDetailPage(props: Props) {
     .select("id, title, order")
     .eq("courseId", courseId)
     .order("order", { ascending: true });
-  const assignments = assignmentsRaw ?? [];
+  const assignments = (assignmentsRaw ?? []).map((a) =>
+    localizeAssignment(locale, { ...a, instructions: "" }),
+  );
+  const localizedCourse = localizeCourse(locale, course);
 
   let resultsMap: Record<string, { passed: boolean; score: number | null }> =
     {};
@@ -72,8 +76,12 @@ export default async function CourseDetailPage(props: Props) {
           >
             {t("back")}
           </Link>
-          <h1 className="mt-2 text-3xl font-bold text-[#1c1d1f]">{course.title}</h1>
-          <p className="mt-3 max-w-3xl text-[#6a6f73]">{course.description}</p>
+          <h1 className="mt-2 text-3xl font-bold text-[#1c1d1f]">
+            {localizedCourse.title}
+          </h1>
+          <p className="mt-3 max-w-3xl text-[#6a6f73]">
+            {localizedCourse.description}
+          </p>
         </div>
         {session?.role === "STUDENT" && (
           <EnrollButton
@@ -109,7 +117,7 @@ export default async function CourseDetailPage(props: Props) {
               return (
                 <li key={a.id}>
                   <Link
-                    href={`/courses/${course.id}/assignment/${a.id}`}
+                    href={`/courses/${localizedCourse.id}/assignment/${a.id}`}
                     className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm font-semibold hover:bg-[#eef5ff] ${
                       r?.passed ? "text-emerald-700" : "text-[#1c1d1f]"
                     }`}
@@ -148,7 +156,7 @@ export default async function CourseDetailPage(props: Props) {
                     <p className="text-xs text-[#6a6f73]">{t("assignment")}</p>
                   </div>
                   <Link
-                    href={`/courses/${course.id}/assignment/${a.id}`}
+                    href={`/courses/${localizedCourse.id}/assignment/${a.id}`}
                     className="rounded bg-[#0056d2] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00419e]"
                   >
                     {t("start")}

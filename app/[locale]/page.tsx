@@ -1,7 +1,8 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { HomeFAQ } from "@/components/HomeFAQ";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { localizeCourse } from "@/lib/sampleCurriculumI18n";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,7 @@ function StarRow({ n }: { n: number }) {
 }
 
 export default async function HomePage() {
+  const locale = await getLocale();
   const t = await getTranslations("home");
 
   const supabase = createAdminClient();
@@ -22,7 +24,7 @@ export default async function HomePage() {
     .from("Course")
     .select("*")
     .order("createdAt", { ascending: true });
-  const courses = coursesRaw ?? [];
+  const courses = (coursesRaw ?? []).map((c) => localizeCourse(locale, c));
   const { data: assignmentsRaw } = await supabase
     .from("Assignment")
     .select("*");

@@ -146,7 +146,10 @@
     "submitted": "Saved. Score: {score}",
     "needLogin": "Log in to submit.",
     "consoleHint": "Use console.log(...) for JavaScript tasks.",
-    "teacherFeedback": "Instructor feedback"
+    "teacherFeedback": "Instructor feedback",
+    "needEnroll": "Join this course before submitting.",
+    "notFound": "Assignment not found.",
+    "submitError": "Submission failed. Please try again."
   },
   "auth": {
     "loginTitle": "Log in",

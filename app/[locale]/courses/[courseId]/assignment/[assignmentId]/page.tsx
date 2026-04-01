@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { AssignmentWorkspace } from "@/components/AssignmentWorkspace";
+import { localizeAssignment, localizeCourse } from "@/lib/sampleCurriculumI18n";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,7 @@ type Props = {
 };
 
 export default async function AssignmentPage(props: Props) {
-  const { courseId, assignmentId } = await props.params;
+  const { locale, courseId, assignmentId } = await props.params;
   const t = await getTranslations("assignment");
   const supabase = createAdminClient();
 
@@ -32,6 +33,10 @@ export default async function AssignmentPage(props: Props) {
     .select("title")
     .eq("id", row.courseId)
     .maybeSingle();
+  const localizedAssignment = localizeAssignment(locale, row);
+  const localizedCourseTitle = courseRow
+    ? localizeCourse(locale, { ...courseRow, description: "" }).title
+    : "";
 
   const session = await getSession();
   const { data: result } = session
@@ -53,9 +58,9 @@ export default async function AssignmentPage(props: Props) {
           {t("back")}
         </Link>
         <h1 className="mt-3 text-2xl font-bold text-[#1c1d1f] md:text-3xl">
-          {row.title}
+          {localizedAssignment.title}
         </h1>
-        <p className="mt-2 text-sm text-[#6a6f73]">{courseRow?.title ?? ""}</p>
+        <p className="mt-2 text-sm text-[#6a6f73]">{localizedCourseTitle}</p>
       </div>
 
       <section className="rounded-xl border border-[#e0e0e0] bg-white p-6 shadow-sm">
@@ -63,7 +68,7 @@ export default async function AssignmentPage(props: Props) {
           {t("instructions")}
         </h2>
         <p className="mt-3 whitespace-pre-wrap text-[#1c1d1f]">
-          {row.instructions}
+          {localizedAssignment.instructions}
         </p>
       </section>
 

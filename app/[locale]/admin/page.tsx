@@ -2,6 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link, redirect } from "@/i18n/routing";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
+import { localizeAssignment, localizeCourse } from "@/lib/sampleCurriculumI18n";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,7 @@ export default async function AdminPage() {
   const t = await getTranslations("admin");
   const tf = await getTranslations("form");
   const tc = await getTranslations("courses");
+  const locale = await getLocale();
   const supabase = createAdminClient();
 
   const { data: coursesRaw } = await supabase
@@ -64,8 +66,13 @@ export default async function AdminPage() {
     asgns.map((a) => [
       a.id,
       {
-        title: a.title,
-        course: { title: courseById[a.courseId]?.title ?? "" },
+        title: localizeAssignment(locale, { ...a, instructions: "" }).title,
+        course: {
+          title: localizeCourse(locale, {
+            title: courseById[a.courseId]?.title ?? "",
+            description: "",
+          }).title,
+        },
       },
     ]),
   );

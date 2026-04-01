@@ -2,13 +2,14 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { redirect } from "@/i18n/routing";
+import { localizeAssignment, localizeCourse } from "@/lib/sampleCurriculumI18n";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
+  const locale = await getLocale();
   const session = await getSession();
   if (!session) {
-    const locale = await getLocale();
     return redirect({ href: "/login", locale });
   }
 
@@ -40,7 +41,13 @@ export default async function DashboardPage() {
   const asgnById = Object.fromEntries(
     asgns.map((a) => [
       a.id,
-      { title: a.title, courseTitle: courseById[a.courseId]?.title ?? "" },
+      {
+        title: localizeAssignment(locale, { ...a, instructions: "" }).title,
+        courseTitle: localizeCourse(locale, {
+          title: courseById[a.courseId]?.title ?? "",
+          description: "",
+        }).title,
+      },
     ]),
   );
 

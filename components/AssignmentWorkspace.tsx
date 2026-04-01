@@ -57,7 +57,6 @@ export function AssignmentWorkspace({
       },
     };
     try {
-      // eslint-disable-next-line no-new-func
       const fn = new Function(
         "console",
         `"use strict";\n${code}\n`,
@@ -91,7 +90,15 @@ export function AssignmentWorkspace({
         feedback?: string | null;
       };
       if (!res.ok) {
-        setMsg(t("needLogin"));
+        if (data.error === "unauthorized") {
+          setMsg(t("needLogin"));
+        } else if (data.error === "forbidden") {
+          setMsg(t("needEnroll"));
+        } else if (data.error === "not_found") {
+          setMsg(t("notFound"));
+        } else {
+          setMsg(t("submitError"));
+        }
         setBusy(false);
         return;
       }
@@ -103,7 +110,7 @@ export function AssignmentWorkspace({
       );
       router.refresh();
     } catch {
-      setMsg("Error");
+      setMsg(t("submitError"));
     }
     setBusy(false);
   }, [assignmentId, code, router, t]);

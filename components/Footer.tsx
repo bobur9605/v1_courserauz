@@ -1,8 +1,10 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
+import { getSession } from "@/lib/auth";
 
 export async function Footer() {
   const t = await getTranslations("footer");
+  const session = await getSession();
 
   const col = (title: string, links: { href: string; label: string }[]) => (
     <div>
@@ -42,8 +44,12 @@ export async function Footer() {
           {col(t("coursesTitle"), [
             { href: "/courses", label: t("courses1") },
             { href: "/dashboard", label: t("courses2") },
-            { href: "/register", label: t("courses3") },
-            { href: "/login", label: t("courses4") },
+            ...(!session
+              ? [
+                  { href: "/register", label: t("courses3") },
+                  { href: "/login", label: t("courses4") },
+                ]
+              : []),
           ])}
           {col(t("careerTitle"), [
             { href: "/about", label: t("career1") },

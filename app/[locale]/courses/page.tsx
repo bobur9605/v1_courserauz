@@ -1,13 +1,15 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
+import { localizeCourse } from "@/lib/sampleCurriculumI18n";
 
 export const dynamic = "force-dynamic";
 
 type PageProps = { searchParams: Promise<{ q?: string }> };
 
 export default async function CoursesPage(props: PageProps) {
+  const locale = await getLocale();
   const { q } = await props.searchParams;
   const search = q?.trim().toLowerCase() ?? "";
   const t = await getTranslations("courses");
@@ -18,7 +20,7 @@ export default async function CoursesPage(props: PageProps) {
     .from("Course")
     .select("*")
     .order("createdAt", { ascending: true });
-  const allCourses = allCoursesRaw ?? [];
+  const allCourses = (allCoursesRaw ?? []).map((c) => localizeCourse(locale, c));
   const { data: assignmentRowsRaw } = await supabase
     .from("Assignment")
     .select("id, courseId");
