@@ -36,7 +36,14 @@ export async function POST(req: Request) {
         .eq("courseId", assignment.courseId)
         .maybeSingle();
       if (!enrollment) {
-        return NextResponse.json({ error: "forbidden" }, { status: 403 });
+        const { error: enrollErr } = await supabase.from("Enrollment").insert({
+          id: newId(),
+          userId: session.sub,
+          courseId: assignment.courseId,
+        });
+        if (enrollErr) {
+          return NextResponse.json({ error: "forbidden" }, { status: 403 });
+        }
       }
     }
 

@@ -2,7 +2,10 @@ type Locale = "uz" | "en" | "ru";
 
 type LocalePack = {
   courses: Record<string, { title: string; description: string }>;
-  assignments: Record<string, { title: string; instructions: string }>;
+  assignments: Record<
+    string,
+    { title: string; instructions: string; starterCode?: string }
+  >;
 };
 
 const packs: Record<Locale, LocalePack> = {
@@ -38,6 +41,8 @@ const packs: Record<Locale, LocalePack> = {
         title: "HTML hujjat skeleti",
         instructions:
           "Minimal HTML skeletini satr sifatida yarating va faqat ochilish teg satrini chiqaring: <html lang=\"en\">",
+        starterCode:
+          "const htmlDoc = `<!doctype html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\" />\n</head>\n<body></body>\n</html>`;\n// Faqat ikkinchi satrni chiqaring\n",
       },
       "CSS Selector Specificity (basic)": {
         title: "CSS selektor xususiyligi (asosiy)",
@@ -149,6 +154,8 @@ const packs: Record<Locale, LocalePack> = {
         title: "Скелет HTML-документа",
         instructions:
           "Создайте строку с минимальным HTML-скелетом и выведите только строку с открывающим тегом: <html lang=\"en\">",
+        starterCode:
+          "const htmlDoc = `<!doctype html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\" />\n</head>\n<body></body>\n</html>`;\n// Выведите только вторую строку\n",
       },
       "CSS Selector Specificity (basic)": {
         title: "Специфичность CSS-селектора (базовая)",
@@ -180,5 +187,10 @@ export function localizeAssignment<T extends { title: string; instructions: stri
 ): T {
   const pack = packs[normalize(locale)].assignments[assignment.title];
   if (!pack) return assignment;
-  return { ...assignment, title: pack.title, instructions: pack.instructions };
+  return {
+    ...assignment,
+    title: pack.title,
+    instructions: pack.instructions,
+    ...(pack.starterCode ? { starterCode: pack.starterCode } : {}),
+  };
 }

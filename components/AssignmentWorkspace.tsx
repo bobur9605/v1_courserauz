@@ -40,9 +40,10 @@ export function AssignmentWorkspace({
     () => ({
       minimap: { enabled: false },
       fontSize: 14,
-      wordWrap: "on" as const,
+      wordWrap: "off" as const,
       scrollBeyondLastLine: false,
       automaticLayout: true,
+      lineNumbersMinChars: 3,
     }),
     [],
   );

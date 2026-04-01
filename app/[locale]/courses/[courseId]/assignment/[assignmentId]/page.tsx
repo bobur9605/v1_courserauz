@@ -75,7 +75,7 @@ export default async function AssignmentPage(props: Props) {
       {session ? (
         <AssignmentWorkspace
           assignmentId={row.id}
-          starterCode={row.starterCode}
+          starterCode={localizedAssignment.starterCode}
           expectedOutput={row.expectedOutput}
           initialCode={result?.submittedCode}
           existingScore={result?.score}
