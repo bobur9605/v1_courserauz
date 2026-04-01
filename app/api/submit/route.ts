@@ -21,11 +21,23 @@ export async function POST(req: Request) {
     const supabase = createAdminClient();
     const { data: assignment, error: aErr } = await supabase
       .from("Assignment")
-      .select("id, expectedOutput")
+      .select("id, expectedOutput, courseId")
       .eq("id", body.assignmentId)
       .maybeSingle();
     if (aErr || !assignment) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
+    }
+
+    if (session.role !== "ADMIN") {
+      const { data: enrollment } = await supabase
+        .from("Enrollment")
+        .select("id")
+        .eq("userId", session.sub)
+        .eq("courseId", assignment.courseId)
+        .maybeSingle();
+      if (!enrollment) {
+        return NextResponse.json({ error: "forbidden" }, { status: 403 });
+      }
     }
 
     const { stdout, ok, error } = runStudentCode(body.code);

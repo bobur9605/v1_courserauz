@@ -6,6 +6,11 @@ type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: Request, ctx: Ctx) {
   const { id } = await ctx.params;
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
   const supabase = createAdminClient();
   const { data: row, error } = await supabase
     .from("Assignment")
@@ -21,7 +26,6 @@ export async function GET(_req: Request, ctx: Ctx) {
     .eq("id", row.courseId)
     .maybeSingle();
 
-  const session = await getSession();
   let result = null as null | {
     score: number | null;
     feedback: string | null;
@@ -29,21 +33,19 @@ export async function GET(_req: Request, ctx: Ctx) {
     submittedCode: string;
   };
 
-  if (session) {
-    const { data: r } = await supabase
-      .from("Result")
-      .select("score, feedback, passed, submittedCode")
-      .eq("studentId", session.sub)
-      .eq("assignmentId", id)
-      .maybeSingle();
-    if (r) {
-      result = {
-        score: r.score,
-        feedback: r.feedback,
-        passed: r.passed,
-        submittedCode: r.submittedCode,
-      };
-    }
+  const { data: r } = await supabase
+    .from("Result")
+    .select("score, feedback, passed, submittedCode")
+    .eq("studentId", session.sub)
+    .eq("assignmentId", id)
+    .maybeSingle();
+  if (r) {
+    result = {
+      score: r.score,
+      feedback: r.feedback,
+      passed: r.passed,
+      submittedCode: r.submittedCode,
+    };
   }
 
   return NextResponse.json({
