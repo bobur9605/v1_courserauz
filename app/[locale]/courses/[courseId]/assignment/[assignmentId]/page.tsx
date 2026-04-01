@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { AssignmentWorkspace } from "@/components/AssignmentWorkspace";
 import { localizeAssignment, localizeCourse } from "@/lib/sampleCurriculumI18n";
+import { inferAssignmentLanguageFromCourseTitle } from "@/lib/assignmentMode";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,9 @@ export default async function AssignmentPage(props: Props) {
   const localizedCourseTitle = courseRow
     ? localizeCourse(locale, { ...courseRow, description: "" }).title
     : "";
+  const editorLanguage = inferAssignmentLanguageFromCourseTitle(
+    courseRow?.title ?? "",
+  );
 
   const session = await getSession();
   const { data: result } = session
@@ -81,6 +85,7 @@ export default async function AssignmentPage(props: Props) {
           existingScore={result?.score}
           existingPassed={result?.passed}
           existingFeedback={result?.feedback}
+          editorLanguage={editorLanguage}
         />
       ) : (
         <p className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">

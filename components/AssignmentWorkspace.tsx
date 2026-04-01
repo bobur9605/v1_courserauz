@@ -4,6 +4,8 @@ import dynamic from "next/dynamic";
 import { useRouter } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
+import { normalizeOutput } from "@/lib/runner";
+import type { AssignmentEditorLanguage } from "@/lib/assignmentMode";
 
 const Monaco = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
@@ -15,6 +17,7 @@ type Props = {
   existingScore?: number | null;
   existingPassed?: boolean;
   existingFeedback?: string | null;
+  editorLanguage?: AssignmentEditorLanguage;
 };
 
 export function AssignmentWorkspace({
@@ -25,6 +28,7 @@ export function AssignmentWorkspace({
   existingScore,
   existingPassed,
   existingFeedback,
+  editorLanguage = "javascript",
 }: Props) {
   const t = useTranslations("assignment");
   const router = useRouter();
@@ -50,6 +54,12 @@ export function AssignmentWorkspace({
 
   const runLocal = useCallback(() => {
     setMsg(null);
+    if (editorLanguage !== "javascript") {
+      const text = normalizeOutput(code);
+      setOutput(text);
+      setLastPass(text === normalizeOutput(expectedOutput));
+      return;
+    }
     const logs: string[] = [];
     const sandbox = {
       console: {
@@ -72,7 +82,7 @@ export function AssignmentWorkspace({
       setMsg(err);
       setLastPass(false);
     }
-  }, [code, expectedOutput]);
+  }, [code, editorLanguage, expectedOutput]);
 
   const submit = useCallback(async () => {
     setBusy(true);
@@ -132,7 +142,7 @@ export function AssignmentWorkspace({
         <div className="h-[500px]">
           <Monaco
             height="100%"
-            defaultLanguage="javascript"
+            language={editorLanguage}
             theme="vs-light"
             value={code}
             onChange={(v) => setCode(v ?? "")}

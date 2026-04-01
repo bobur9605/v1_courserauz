@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { normalizeOutput, runStudentCode } from "@/lib/runner";
 import { newId } from "@/lib/ids";
+import { inferAssignmentLanguageFromCourseTitle } from "@/lib/assignmentMode";
 
 const schema = z.object({
   assignmentId: z.string().min(1),
@@ -27,6 +28,12 @@ export async function POST(req: Request) {
     if (aErr || !assignment) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
+    const { data: course } = await supabase
+      .from("Course")
+      .select("title")
+      .eq("id", assignment.courseId)
+      .maybeSingle();
+    const language = inferAssignmentLanguageFromCourseTitle(course?.title ?? "");
 
     if (session.role !== "ADMIN") {
       const { data: enrollment } = await supabase
@@ -47,7 +54,11 @@ export async function POST(req: Request) {
       }
     }
 
-    const { stdout, ok, error } = runStudentCode(body.code);
+    const execution =
+      language === "javascript"
+        ? runStudentCode(body.code)
+        : { ok: true, stdout: normalizeOutput(body.code), error: undefined };
+    const { stdout, ok, error } = execution;
     const expected = normalizeOutput(assignment.expectedOutput);
     const got = normalizeOutput(stdout);
     const passed = ok && got === expected;
