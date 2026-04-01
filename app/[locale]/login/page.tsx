@@ -1,13 +1,12 @@
 "use client";
 
-import { Link, useRouter } from "@/i18n/routing";
+import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 export default function LoginPage() {
   const t = useTranslations("auth");
   const tnav = useTranslations("nav");
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
@@ -27,8 +26,7 @@ export default function LoginPage() {
       setError(true);
       return;
     }
-    router.replace("/dashboard");
-    router.refresh();
+    window.location.assign("/dashboard");
   }
 
   return (

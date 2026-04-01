@@ -9,7 +9,24 @@ import { inferAssignmentLanguageFromCourseTitle } from "@/lib/assignmentMode";
 const schema = z.object({
   assignmentId: z.string().min(1),
   code: z.string(),
+  locale: z.enum(["uz", "en", "ru"]).optional(),
 });
+
+function mismatchFeedback(locale: "uz" | "en" | "ru", expected: string, got: string) {
+  if (locale === "uz") {
+    return `Kutilgan natija:\n${expected}\n\nSizning natijangiz:\n${got}`;
+  }
+  if (locale === "ru") {
+    return `Ожидаемый результат:\n${expected}\n\nВаш результат:\n${got}`;
+  }
+  return `Expected output:\n${expected}\n\nYour output:\n${got}`;
+}
+
+function runtimeFeedback(locale: "uz" | "en" | "ru", error: string) {
+  if (locale === "uz") return `Ishga tushirish xatosi:\n${error}`;
+  if (locale === "ru") return `Ошибка выполнения:\n${error}`;
+  return `Runtime error:\n${error}`;
+}
 
 export async function POST(req: Request) {
   const session = await getSession();
@@ -19,6 +36,7 @@ export async function POST(req: Request) {
 
   try {
     const body = schema.parse(await req.json());
+    const locale = body.locale ?? "en";
     const supabase = createAdminClient();
     const { data: assignment, error: aErr } = await supabase
       .from("Assignment")
@@ -66,8 +84,8 @@ export async function POST(req: Request) {
     const feedback = passed
       ? null
       : error
-        ? `Runtime: ${error}`
-        : `Expected: "${expected}" but got: "${got}"`;
+        ? runtimeFeedback(locale, error)
+        : mismatchFeedback(locale, expected, got);
     const now = new Date().toISOString();
 
     const { data: prior } = await supabase

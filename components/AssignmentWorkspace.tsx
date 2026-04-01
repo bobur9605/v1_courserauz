@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useRouter } from "@/i18n/routing";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 import { normalizeOutput } from "@/lib/runner";
 import type { AssignmentEditorLanguage } from "@/lib/assignmentMode";
@@ -31,6 +31,7 @@ export function AssignmentWorkspace({
   editorLanguage = "javascript",
 }: Props) {
   const t = useTranslations("assignment");
+  const locale = useLocale();
   const router = useRouter();
   const [code, setCode] = useState(initialCode ?? starterCode);
   const [output, setOutput] = useState("");
@@ -91,7 +92,7 @@ export function AssignmentWorkspace({
       const res = await fetch("/api/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assignmentId, code }),
+        body: JSON.stringify({ assignmentId, code, locale }),
       });
       const data = (await res.json()) as {
         passed?: boolean;
@@ -117,14 +118,14 @@ export function AssignmentWorkspace({
       setLastPass(!!data.passed);
       setMsg(
         t("submitted", { score: String(data.score ?? 0) }) +
-          (data.feedback ? ` — ${data.feedback}` : ""),
+          (data.feedback ? `\n${data.feedback}` : ""),
       );
       router.refresh();
     } catch {
       setMsg(t("submitError"));
     }
     setBusy(false);
-  }, [assignmentId, code, router, t]);
+  }, [assignmentId, code, locale, router, t]);
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
@@ -167,7 +168,10 @@ export function AssignmentWorkspace({
             {t("submit")}
           </button>
           {msg && (
-            <p className="ml-auto text-sm font-medium text-[#0056d2]" role="status">
+            <p
+              className="ml-auto max-w-[55%] whitespace-pre-wrap text-right text-sm font-medium text-[#0056d2]"
+              role="status"
+            >
               {msg}
             </p>
           )}
@@ -208,7 +212,7 @@ export function AssignmentWorkspace({
         {(existingFeedback || existingScore !== undefined) && (
           <div className="rounded-xl border border-[#dfe3e8] bg-white p-4 text-sm shadow-sm">
             <p className="font-semibold text-[#1c1d1f]">{t("teacherFeedback")}</p>
-            <p className="mt-1 text-[#6a6f73]">
+            <p className="mt-1 whitespace-pre-wrap text-[#6a6f73]">
               {existingFeedback || "—"}
               {existingScore != null ? ` (${existingScore})` : ""}
             </p>
