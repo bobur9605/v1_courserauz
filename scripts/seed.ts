@@ -43,9 +43,16 @@ async function main() {
   const password = await bcrypt.hash("demo1234", 10);
   await ensureUser(
     supabase,
+    "admin@wdedu.uz",
+    "Demo Admin",
+    "ADMIN",
+    password,
+  );
+  const teacherId = await ensureUser(
+    supabase,
     "teacher@wdedu.uz",
     "Demo O‘qituvchi",
-    "ADMIN",
+    "TEACHER",
     password,
   );
   const studentId = await ensureUser(
@@ -75,6 +82,7 @@ async function main() {
         "From document structure to semantic markup: headings, sections, forms, tables, and accessible page layout.",
       durationHours: 18,
       difficultyLevel: "beginner",
+      teacherId,
     },
     {
       id: cssId,
@@ -83,6 +91,7 @@ async function main() {
         "Selectors, cascade, spacing, typography, responsive design, Flexbox, and Grid for modern interfaces.",
       durationHours: 22,
       difficultyLevel: "beginner",
+      teacherId,
     },
     {
       id: jsId,
@@ -91,6 +100,7 @@ async function main() {
         "Core syntax, functions, arrays/objects, loops, async basics, and DOM-driven problem solving.",
       durationHours: 28,
       difficultyLevel: "intermediate",
+      teacherId,
     },
     {
       id: gitRestId,
@@ -99,6 +109,7 @@ async function main() {
         "Version control habits, commit strategy, HTTP methods, JSON payloads, and frontend-backend interaction.",
       durationHours: 14,
       difficultyLevel: "beginner",
+      teacherId,
     },
   ]);
   if (cErr) throw cErr;
@@ -311,7 +322,9 @@ async function main() {
   ]);
   if (enErr) throw enErr;
 
-  console.log("Seed OK. teacher@wdedu.uz / student@wdedu.uz — parol: demo1234");
+  console.log(
+    "Seed OK. admin@wdedu.uz / teacher@wdedu.uz / student@wdedu.uz — parol: demo1234",
+  );
 }
 
 main().catch((e) => {

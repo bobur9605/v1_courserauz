@@ -29,6 +29,8 @@
     "myDashboard": "My learning",
     "codeLabs": "Code labs & assignments",
     "instructor": "Instructor console",
+    "teacherPanel": "Teacher workspace",
+    "adminPanel": "Admin",
     "joinFree": "Join for Free"
   },
   "lang": {
@@ -53,7 +55,7 @@
     "featureProgressTitle": "Grades & feedback",
     "featureProgressDesc": "Scores, instructor comments, and a dedicated instructor console.",
     "demoTitle": "Demo accounts",
-    "demoTeacher": "Teacher: teacher@wdedu.uz",
+    "demoTeacher": "Admin: admin@wdedu.uz • Teacher: teacher@wdedu.uz",
     "demoStudent": "Student: student@wdedu.uz",
     "demoPass": "Password: demo1234",
     "heroLeftTitle": "Grow your skills. Shape your career.",
@@ -131,7 +133,14 @@
     "progress": "Progress",
     "noAssignments": "No assignments in this course yet.",
     "assignment": "Assignment",
-    "start": "Start"
+    "start": "Start",
+    "locked": "Locked — complete the previous lesson first.",
+    "sequenceHint": "Complete each assignment in order before opening the next one.",
+    "resources": "Course resources",
+    "resourcesLoading": "Loading resources…",
+    "download": "Download",
+    "deleteResource": "Delete",
+    "noResources": "No files yet."
   },
   "assignment": {
     "back": "Back to course",
@@ -166,6 +175,10 @@
   "dashboard": {
     "title": "My learning dashboard",
     "subtitle": "Assignments, scores, and courses.",
+    "myCourses": "My courses",
+    "noCourses": "You are not enrolled in any course yet.",
+    "progressLabel": "{done} / {total} assignments ({pct}%)",
+    "openCourse": "Open course",
     "myResults": "My results",
     "course": "Course",
     "assignment": "Assignment",
@@ -176,13 +189,37 @@
     "noResults": "No submissions yet."
   },
   "admin": {
-    "title": "Instructor console",
+    "title": "Admin",
     "subtitle": "Manage courses and assignments.",
+    "subtitleAdmin": "Create new courses and assign a lead teacher.",
     "newCourse": "New course",
     "newAssignment": "New assignment",
     "allCourses": "Courses",
     "students": "Student results",
-    "assignments": "Assignments"
+    "assignments": "Assignments",
+    "noTeachers": "No teacher accounts yet. Create a user with role TEACHER first."
+  },
+  "teacher": {
+    "title": "Teacher workspace",
+    "subtitle": "Resources, assignments, and student progress.",
+    "myCourses": "My courses",
+    "noCourses": "No courses are assigned to you.",
+    "newAssignment": "New assignment",
+    "assignmentsList": "Assignments",
+    "noAssignments": "No assignments yet.",
+    "uploadResource": "Upload resource",
+    "upload": "Upload",
+    "file": "File",
+    "pickFile": "Choose a file.",
+    "uploadFailed": "Upload failed.",
+    "uploadOk": "Uploaded.",
+    "optionalTitle": "Title (optional — defaults to file name)",
+    "studentsProgress": "Students",
+    "student": "Student",
+    "progressCol": "Progress",
+    "noStudents": "No enrolled students yet.",
+    "viewPublicCourse": "Course page",
+    "backToCourse": "Back to course"
   },
   "form": {
     "courseTitle": "Course title",
@@ -198,7 +235,9 @@
     "grade": "Grade",
     "feedback": "Feedback",
     "saveGrade": "Save grade",
-    "user": "User"
+    "user": "User",
+    "assignTeacher": "Lead teacher",
+    "resourceTitle": "Resource title"
   },
   "footer": {
     "rights": "© 2026 WD-EDU. Educational project.",

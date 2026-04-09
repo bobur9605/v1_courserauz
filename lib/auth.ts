@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 const COOKIE = "wdedu_session";
 
-export type Role = "ADMIN" | "STUDENT";
+export type Role = "ADMIN" | "TEACHER" | "STUDENT";
 const getSecret = () => {
   const s = process.env.JWT_SECRET;
   if (!s) throw new Error("JWT_SECRET is not set");
@@ -58,7 +58,11 @@ export async function getSession(): Promise<SessionPayload | null> {
     ) {
       return null;
     }
-    if (payload.role !== "ADMIN" && payload.role !== "STUDENT") {
+    if (
+      payload.role !== "ADMIN" &&
+      payload.role !== "TEACHER" &&
+      payload.role !== "STUDENT"
+    ) {
       return null;
     }
     return {

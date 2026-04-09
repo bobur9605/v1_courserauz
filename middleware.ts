@@ -5,7 +5,7 @@ import { routing } from "./i18n/routing";
 
 const intl = createMiddleware(routing);
 
-const PROTECTED_PREFIXES = ["/dashboard"];
+const PROTECTED_PREFIXES = ["/dashboard", "/teacher"];
 const ADMIN_PREFIXES = ["/admin"];
 
 function pathnameWithoutLocale(pathname: string) {
@@ -51,6 +51,19 @@ export default async function middleware(req: NextRequest) {
         new TextEncoder().encode(process.env.JWT_SECRET),
       );
       if (needsAdmin && payload.role !== "ADMIN") {
+        const dash =
+          currentLocale === routing.defaultLocale
+            ? "/dashboard"
+            : `/${currentLocale}/dashboard`;
+        url.pathname = dash;
+        return NextResponse.redirect(url);
+      }
+      const onTeacher = bare.startsWith("/teacher");
+      if (
+        onTeacher &&
+        payload.role !== "TEACHER" &&
+        payload.role !== "ADMIN"
+      ) {
         const dash =
           currentLocale === routing.defaultLocale
             ? "/dashboard"

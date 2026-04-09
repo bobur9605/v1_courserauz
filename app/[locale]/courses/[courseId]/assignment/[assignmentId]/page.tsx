@@ -1,11 +1,12 @@
 import { getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/routing";
+import { Link, redirect } from "@/i18n/routing";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { AssignmentWorkspace } from "@/components/AssignmentWorkspace";
 import { localizeAssignment, localizeCourse } from "@/lib/sampleCurriculumI18n";
 import { inferAssignmentLanguageFromCourseTitle } from "@/lib/assignmentMode";
+import { studentMayAccessAssignmentOrder } from "@/lib/assignmentGatingServer";
 
 export const dynamic = "force-dynamic";
 
@@ -21,13 +22,25 @@ export default async function AssignmentPage(props: Props) {
   const { data: row, error } = await supabase
     .from("Assignment")
     .select(
-      "id, title, instructions, starterCode, expectedOutput, courseId",
+      "id, title, instructions, starterCode, expectedOutput, courseId, order",
     )
     .eq("id", assignmentId)
     .eq("courseId", courseId)
     .maybeSingle();
 
   if (error || !row) notFound();
+
+  const session = await getSession();
+  if (
+    session?.role === "STUDENT" &&
+    !(await studentMayAccessAssignmentOrder(
+      session.sub,
+      row.courseId,
+      row.order,
+    ))
+  ) {
+    redirect({ href: `/courses/${courseId}?locked=1`, locale });
+  }
 
   const { data: courseRow } = await supabase
     .from("Course")
@@ -42,7 +55,6 @@ export default async function AssignmentPage(props: Props) {
     courseRow?.title ?? "",
   );
 
-  const session = await getSession();
   const { data: result } = session
     ? await supabase
         .from("Result")

@@ -1,11 +1,15 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { loader } from "@monaco-editor/react";
+import * as monaco from "monaco-editor";
 import { useRouter } from "@/i18n/routing";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 import { normalizeOutput } from "@/lib/runner";
 import type { AssignmentEditorLanguage } from "@/lib/assignmentMode";
+
+loader.config({ monaco });
 
 const Monaco = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 

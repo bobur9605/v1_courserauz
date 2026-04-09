@@ -82,7 +82,7 @@ export default async function AdminPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-[#1c1d1f]">{t("title")}</h1>
-          <p className="mt-2 text-[#6a6f73]">{t("subtitle")}</p>
+          <p className="mt-2 text-[#6a6f73]">{t("subtitleAdmin")}</p>
         </div>
         <div className="flex flex-wrap gap-3">
           <Link
@@ -90,12 +90,6 @@ export default async function AdminPage() {
             className="rounded-md bg-[#0056d2] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00419e]"
           >
             {t("newCourse")}
-          </Link>
-          <Link
-            href="/admin/assignments/new"
-            className="rounded-md border border-[#0056d2] px-4 py-2 text-sm font-semibold text-[#0056d2] hover:bg-[#eef5ff]"
-          >
-            {t("newAssignment")}
           </Link>
         </div>
       </div>

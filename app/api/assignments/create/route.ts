@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { newId } from "@/lib/ids";
+import { canManageCourseContent } from "@/lib/coursePermissions";
 
 const schema = z.object({
   courseId: z.string().min(1),
@@ -14,12 +15,20 @@ const schema = z.object({
 
 export async function POST(req: Request) {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   try {
     const body = schema.parse(await req.json());
     const supabase = createAdminClient();
+    const { data: course } = await supabase
+      .from("Course")
+      .select("teacherId")
+      .eq("id", body.courseId)
+      .maybeSingle();
+    if (!course || !canManageCourseContent(session, course.teacherId)) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
     const { data: rows } = await supabase
       .from("Assignment")
       .select("order")

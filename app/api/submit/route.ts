@@ -5,6 +5,8 @@ import { getSession } from "@/lib/auth";
 import { normalizeOutput, runStudentCode } from "@/lib/runner";
 import { newId } from "@/lib/ids";
 import { inferAssignmentLanguageFromCourseTitle } from "@/lib/assignmentMode";
+import { bypassesAssignmentSequence } from "@/lib/assignmentGating";
+import { studentMayAccessAssignmentOrder } from "@/lib/assignmentGatingServer";
 
 const schema = z.object({
   assignmentId: z.string().min(1),
@@ -40,11 +42,21 @@ export async function POST(req: Request) {
     const supabase = createAdminClient();
     const { data: assignment, error: aErr } = await supabase
       .from("Assignment")
-      .select("id, expectedOutput, courseId")
+      .select("id, expectedOutput, courseId, order")
       .eq("id", body.assignmentId)
       .maybeSingle();
     if (aErr || !assignment) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
+    }
+    if (
+      !bypassesAssignmentSequence(session) &&
+      !(await studentMayAccessAssignmentOrder(
+        session.sub,
+        assignment.courseId,
+        assignment.order,
+      ))
+    ) {
+      return NextResponse.json({ error: "sequence_locked" }, { status: 403 });
     }
     const { data: course } = await supabase
       .from("Course")
@@ -53,7 +65,7 @@ export async function POST(req: Request) {
       .maybeSingle();
     const language = inferAssignmentLanguageFromCourseTitle(course?.title ?? "");
 
-    if (session.role !== "ADMIN") {
+    if (session.role === "STUDENT") {
       const { data: enrollment } = await supabase
         .from("Enrollment")
         .select("id")

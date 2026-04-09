@@ -29,6 +29,8 @@
     "myDashboard": "Mening panelim",
     "codeLabs": "Amaliy laboratoriyalar",
     "instructor": "O‘qituvchi paneli",
+    "teacherPanel": "O‘qituvchi kabineti",
+    "adminPanel": "Admin panel",
     "joinFree": "Bepul qo‘shilish"
   },
   "lang": {
@@ -53,7 +55,7 @@
     "featureProgressTitle": "Progress va baholash",
     "featureProgressDesc": "Ball, fikr-mulohaza va o‘qituvchi paneli bilan shaffof natijalar.",
     "demoTitle": "Sinov akkauntlari",
-    "demoTeacher": "O‘qituvchi: teacher@wdedu.uz",
+    "demoTeacher": "Admin: admin@wdedu.uz • O‘qituvchi: teacher@wdedu.uz",
     "demoStudent": "Talaba: student@wdedu.uz",
     "demoPass": "Parol: demo1234",
     "heroLeftTitle": "Ko‘nikmalaringizni o‘siting. Karyerangizni shakllantiring.",
@@ -131,7 +133,14 @@
     "progress": "Progress",
     "noAssignments": "Bu kursda hali topshiriq yo‘q.",
     "assignment": "Topshiriq",
-    "start": "Bajarish"
+    "start": "Bajarish",
+    "locked": "Oldingi modul yopiq",
+    "sequenceHint": "Avvalgi topshiriq muvaffaqiyatli bajarilmaguncha keyingi darsga o‘tib bo‘lmaydi.",
+    "resources": "Kurs resurslari",
+    "resourcesLoading": "Resurslar yuklanmoqda…",
+    "download": "Yuklab olish",
+    "deleteResource": "O‘chirish",
+    "noResources": "Hozircha fayllar yo‘q."
   },
   "assignment": {
     "back": "Kursga qaytish",
@@ -166,7 +175,11 @@
   "dashboard": {
     "title": "Mening o‘quv panelim",
     "subtitle": "Topshiriqlar, ballar va kurslar.",
-    "myResults": "Natijalarim",
+    "myCourses": "Mening kurslarim",
+    "noCourses": "Hozircha ro‘yxatdan o‘tgan kurslar yo‘q.",
+    "progressLabel": "{done} / {total} topshiriq ({pct}%)",
+    "openCourse": "Kursga o‘tish",
+    "myResults": "Mening natijalarim",
     "course": "Kurs",
     "assignment": "Topshiriq",
     "score": "Ball",
@@ -176,13 +189,37 @@
     "noResults": "Hali topshirilgan ishlar yo‘q."
   },
   "admin": {
-    "title": "O‘qituvchi paneli",
+    "title": "Admin panel",
     "subtitle": "Kurslar va topshiriqlarni boshqarish.",
+    "subtitleAdmin": "Yangi kurs oching va mas'ul o‘qituvchini tayinlang.",
     "newCourse": "Yangi kurs",
     "newAssignment": "Yangi topshiriq",
     "allCourses": "Mavjud kurslar",
     "students": "Talabalar natijalari",
-    "assignments": "Topshiriqlar"
+    "assignments": "Topshiriqlar",
+    "noTeachers": "Tizimda TEACHER ro‘li bilan foydalanuvchi yo‘q. Avval uni yarating."
+  },
+  "teacher": {
+    "title": "O‘qituvchi kabineti",
+    "subtitle": "Resurslar, topshiriqlar va talabalar progressi.",
+    "myCourses": "Mening kurslarim",
+    "noCourses": "Sizga biriktirilgan kurs yo‘q.",
+    "newAssignment": "Yangi topshiriq",
+    "assignmentsList": "Topshiriqlar",
+    "noAssignments": "Hozircha topshiriq yo‘q.",
+    "uploadResource": "Resurs yuklash",
+    "upload": "Yuklash",
+    "file": "Fayl",
+    "pickFile": "Fayl tanlang.",
+    "uploadFailed": "Yuklash muvaffaqiyatsiz.",
+    "uploadOk": "Yuklandi.",
+    "optionalTitle": "Nom (ixtiyoriy, bo‘sh bo‘lsa fayl nomi)",
+    "studentsProgress": "Talabalar",
+    "student": "Talaba",
+    "progressCol": "Progress",
+    "noStudents": "Hozircha ro‘yxatdan o‘tgan talaba yo‘q.",
+    "viewPublicCourse": "Kurs sahifasi",
+    "backToCourse": "Kursga qaytish"
   },
   "form": {
     "courseTitle": "Kurs nomi",
@@ -198,7 +235,9 @@
     "grade": "Baholash",
     "feedback": "Fikr-mulohaza",
     "saveGrade": "Bahoni saqlash",
-    "user": "Foydalanuvchi"
+    "user": "Foydalanuvchi",
+    "assignTeacher": "Mas'ul o‘qituvchi",
+    "resourceTitle": "Resurs nomi"
   },
   "footer": {
     "rights": "© 2026 WD-EDU. Individual ta‘limiy loyiha.",

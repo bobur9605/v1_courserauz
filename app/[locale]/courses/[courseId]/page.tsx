@@ -5,13 +5,19 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { EnrollButton } from "@/components/EnrollButton";
 import { localizeAssignment, localizeCourse } from "@/lib/sampleCurriculumI18n";
+import { assignmentLockMap } from "@/lib/assignmentGating";
+import { CourseResourcesList } from "@/components/CourseResourcesList";
 
 export const dynamic = "force-dynamic";
 
-type Props = { params: Promise<{ locale: string; courseId: string }> };
+type Props = {
+  params: Promise<{ locale: string; courseId: string }>;
+  searchParams: Promise<{ locked?: string }>;
+};
 
 export default async function CourseDetailPage(props: Props) {
   const { courseId, locale } = await props.params;
+  const { locked } = await props.searchParams;
   const t = await getTranslations("course");
   const tc = await getTranslations("courses");
   const session = await getSession();
@@ -29,6 +35,10 @@ export default async function CourseDetailPage(props: Props) {
     .select("id, title, order")
     .eq("courseId", courseId)
     .order("order", { ascending: true });
+  const assignmentsForLock = (assignmentsRaw ?? []).map((a) => ({
+    id: a.id,
+    order: a.order,
+  }));
   const assignments = (assignmentsRaw ?? []).map((a) =>
     localizeAssignment(locale, { ...a, instructions: "" }),
   );
@@ -62,6 +72,8 @@ export default async function CourseDetailPage(props: Props) {
     );
   }
 
+  const lockById = assignmentLockMap(assignmentsForLock, resultsMap, session);
+
   const total = assignments.length;
   const done = assignments.filter((a) => resultsMap[a.id]?.passed).length;
   const pct = total ? Math.round((done / total) * 100) : 0;
@@ -93,6 +105,19 @@ export default async function CourseDetailPage(props: Props) {
         )}
       </div>
 
+      {locked && session?.role === "STUDENT" && (
+        <div
+          className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900"
+          role="status"
+        >
+          {t("sequenceHint")}
+        </div>
+      )}
+
+      {session && (session.role === "STUDENT" ? isEnrolled : true) && (
+        <CourseResourcesList courseId={course.id} canManage={false} />
+      )}
+
       <div className="rounded-xl border border-[#e0e0e0] bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-lg font-bold text-[#1c1d1f]">{t("progress")}</h2>
@@ -114,21 +139,34 @@ export default async function CourseDetailPage(props: Props) {
           <ol className="mt-4 space-y-2">
             {assignments.map((a, i) => {
               const r = resultsMap[a.id];
+              const locked = !!lockById[a.id];
+              const rowClass = `flex items-center justify-between rounded-lg px-3 py-2 text-sm font-semibold ${
+                locked
+                  ? "cursor-not-allowed opacity-50 text-[#6a6f73]"
+                  : `hover:bg-[#eef5ff] ${r?.passed ? "text-emerald-700" : "text-[#1c1d1f]"}`
+              }`;
               return (
                 <li key={a.id}>
-                  <Link
-                    href={`/courses/${localizedCourse.id}/assignment/${a.id}`}
-                    className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm font-semibold hover:bg-[#eef5ff] ${
-                      r?.passed ? "text-emerald-700" : "text-[#1c1d1f]"
-                    }`}
-                  >
-                    <span className="truncate pr-2">
-                      {i + 1}. {a.title}
+                  {locked ? (
+                    <span className={rowClass} title={t("locked")}>
+                      <span className="truncate pr-2">
+                        {i + 1}. {a.title}
+                      </span>
+                      <span className="text-xs">🔒</span>
                     </span>
-                    {r?.passed && (
-                      <span className="text-xs text-emerald-600">✓</span>
-                    )}
-                  </Link>
+                  ) : (
+                    <Link
+                      href={`/courses/${localizedCourse.id}/assignment/${a.id}`}
+                      className={rowClass}
+                    >
+                      <span className="truncate pr-2">
+                        {i + 1}. {a.title}
+                      </span>
+                      {r?.passed && (
+                        <span className="text-xs text-emerald-600">✓</span>
+                      )}
+                    </Link>
+                  )}
                 </li>
               );
             })}
@@ -144,25 +182,36 @@ export default async function CourseDetailPage(props: Props) {
             <p className="text-sm text-[#6a6f73]">{t("noAssignments")}</p>
           ) : (
             <ul className="divide-y divide-[#e0e0e0]">
-              {assignments.map((a, i) => (
-                <li
-                  key={a.id}
-                  className="flex flex-wrap items-center justify-between gap-3 py-4 first:pt-0 last:pb-0"
-                >
-                  <div>
-                    <p className="font-semibold text-[#1c1d1f]">
-                      {i + 1}. {a.title}
-                    </p>
-                    <p className="text-xs text-[#6a6f73]">{t("assignment")}</p>
-                  </div>
-                  <Link
-                    href={`/courses/${localizedCourse.id}/assignment/${a.id}`}
-                    className="rounded bg-[#0056d2] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00419e]"
+              {assignments.map((a, i) => {
+                const locked = !!lockById[a.id];
+                return (
+                  <li
+                    key={a.id}
+                    className="flex flex-wrap items-center justify-between gap-3 py-4 first:pt-0 last:pb-0"
                   >
-                    {t("start")}
-                  </Link>
-                </li>
-              ))}
+                    <div>
+                      <p className="font-semibold text-[#1c1d1f]">
+                        {i + 1}. {a.title}
+                      </p>
+                      <p className="text-xs text-[#6a6f73]">
+                        {locked ? t("locked") : t("assignment")}
+                      </p>
+                    </div>
+                    {locked ? (
+                      <span className="rounded bg-[#e5e7eb] px-4 py-2 text-sm font-semibold text-[#6a6f73]">
+                        {t("locked")}
+                      </span>
+                    ) : (
+                      <Link
+                        href={`/courses/${localizedCourse.id}/assignment/${a.id}`}
+                        className="rounded bg-[#0056d2] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00419e]"
+                      >
+                        {t("start")}
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

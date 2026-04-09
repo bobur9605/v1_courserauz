@@ -29,6 +29,8 @@
     "myDashboard": "Мое обучение",
     "codeLabs": "Лабораторные работы",
     "instructor": "Панель преподавателя",
+    "teacherPanel": "Кабинет преподавателя",
+    "adminPanel": "Админ-панель",
     "joinFree": "Присоединиться бесплатно"
   },
   "lang": {
@@ -53,7 +55,7 @@
     "featureProgressTitle": "Оценки и обратная связь",
     "featureProgressDesc": "Баллы, комментарии преподавателя и отдельная панель управления.",
     "demoTitle": "Демо-аккаунты",
-    "demoTeacher": "Преподаватель: teacher@wdedu.uz",
+    "demoTeacher": "Админ: admin@wdedu.uz • Преподаватель: teacher@wdedu.uz",
     "demoStudent": "Студент: student@wdedu.uz",
     "demoPass": "Пароль: demo1234",
     "heroLeftTitle": "Развивайте навыки. Стройте карьеру.",
@@ -131,7 +133,14 @@
     "progress": "Прогресс",
     "noAssignments": "В этом курсе пока нет заданий.",
     "assignment": "Задание",
-    "start": "Начать"
+    "start": "Начать",
+    "locked": "Закрыто — сначала пройдите предыдущий модуль.",
+    "sequenceHint": "Открывайте задания по порядку: следующий урок недоступен, пока не сдан предыдущий.",
+    "resources": "Материалы курса",
+    "resourcesLoading": "Загрузка материалов…",
+    "download": "Скачать",
+    "deleteResource": "Удалить",
+    "noResources": "Пока нет файлов."
   },
   "assignment": {
     "back": "Назад к курсу",
@@ -166,6 +175,10 @@
   "dashboard": {
     "title": "Моя панель обучения",
     "subtitle": "Задания, баллы и курсы.",
+    "myCourses": "Мои курсы",
+    "noCourses": "Вы ещё не записаны ни на один курс.",
+    "progressLabel": "{done} / {total} заданий ({pct}%)",
+    "openCourse": "Открыть курс",
     "myResults": "Мои результаты",
     "course": "Курс",
     "assignment": "Задание",
@@ -176,13 +189,37 @@
     "noResults": "Пока нет отправок."
   },
   "admin": {
-    "title": "Панель преподавателя",
+    "title": "Админ-панель",
     "subtitle": "Управление курсами и заданиями.",
+    "subtitleAdmin": "Создавайте курсы и назначайте ответственного преподавателя.",
     "newCourse": "Новый курс",
     "newAssignment": "Новое задание",
     "allCourses": "Курсы",
     "students": "Результаты студентов",
-    "assignments": "Задания"
+    "assignments": "Задания",
+    "noTeachers": "Нет пользователей с ролью TEACHER. Сначала создайте такого пользователя."
+  },
+  "teacher": {
+    "title": "Кабинет преподавателя",
+    "subtitle": "Материалы, задания и прогресс студентов.",
+    "myCourses": "Мои курсы",
+    "noCourses": "Вам не назначено ни одного курса.",
+    "newAssignment": "Новое задание",
+    "assignmentsList": "Задания",
+    "noAssignments": "Заданий пока нет.",
+    "uploadResource": "Загрузить материал",
+    "upload": "Загрузить",
+    "file": "Файл",
+    "pickFile": "Выберите файл.",
+    "uploadFailed": "Ошибка загрузки.",
+    "uploadOk": "Загружено.",
+    "optionalTitle": "Название (необязательно — по умолчанию имя файла)",
+    "studentsProgress": "Студенты",
+    "student": "Студент",
+    "progressCol": "Прогресс",
+    "noStudents": "Пока никто не записан.",
+    "viewPublicCourse": "Страница курса",
+    "backToCourse": "Назад к курсу"
   },
   "form": {
     "courseTitle": "Название курса",
@@ -198,7 +235,9 @@
     "grade": "Оценка",
     "feedback": "Обратная связь",
     "saveGrade": "Сохранить оценку",
-    "user": "Пользователь"
+    "user": "Пользователь",
+    "assignTeacher": "Ответственный преподаватель",
+    "resourceTitle": "Название материала"
   },
   "footer": {
     "rights": "© 2026 WD-EDU. Учебный проект.",

@@ -26,6 +26,9 @@ export async function SiteHeader() {
               <ExploreNav
                 loggedIn={!!session}
                 isAdmin={session?.role === "ADMIN"}
+                showTeacherPanel={
+                  session?.role === "TEACHER" || session?.role === "ADMIN"
+                }
               />
               <Link
                 href="/courses"

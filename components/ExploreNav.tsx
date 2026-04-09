@@ -7,9 +7,10 @@ import { useEffect, useRef, useState } from "react";
 type Props = {
   loggedIn: boolean;
   isAdmin: boolean;
+  showTeacherPanel: boolean;
 };
 
-export function ExploreNav({ loggedIn, isAdmin }: Props) {
+export function ExploreNav({ loggedIn, isAdmin, showTeacherPanel }: Props) {
   const t = useTranslations("header");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -70,13 +71,22 @@ export function ExploreNav({ loggedIn, isAdmin }: Props) {
           >
             {t("codeLabs")}
           </Link>
+          {showTeacherPanel && (
+            <Link
+              href="/teacher"
+              className="block px-4 py-2.5 text-sm font-semibold text-[#0056d2] hover:bg-[#eef5ff]"
+              onClick={() => setOpen(false)}
+            >
+              {t("teacherPanel")}
+            </Link>
+          )}
           {isAdmin && (
             <Link
               href="/admin"
               className="block px-4 py-2.5 text-sm font-semibold text-[#0056d2] hover:bg-[#eef5ff]"
               onClick={() => setOpen(false)}
             >
-              {t("instructor")}
+              {t("adminPanel")}
             </Link>
           )}
         </div>

@@ -49,6 +49,7 @@ const createSchema = z.object({
   description: z.string().min(2),
   durationHours: z.coerce.number().int().min(1),
   difficultyLevel: z.string().min(1),
+  teacherId: z.string().min(1),
 });
 
 export async function POST(req: Request) {
@@ -59,6 +60,15 @@ export async function POST(req: Request) {
   try {
     const body = createSchema.parse(await req.json());
     const supabase = createAdminClient();
+    const { data: teacher, error: tErr } = await supabase
+      .from("User")
+      .select("id")
+      .eq("id", body.teacherId)
+      .eq("role", "TEACHER")
+      .maybeSingle();
+    if (tErr || !teacher) {
+      return NextResponse.json({ error: "invalid_teacher" }, { status: 400 });
+    }
     const { data: course, error } = await supabase
       .from("Course")
       .insert({
@@ -67,6 +77,7 @@ export async function POST(req: Request) {
         description: body.description,
         durationHours: body.durationHours,
         difficultyLevel: body.difficultyLevel,
+        teacherId: body.teacherId,
       })
       .select("*")
       .single();

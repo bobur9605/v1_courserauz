@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
+import { studentMayAccessAssignmentOrder } from "@/lib/assignmentGatingServer";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -14,11 +15,23 @@ export async function GET(_req: Request, ctx: Ctx) {
   const supabase = createAdminClient();
   const { data: row, error } = await supabase
     .from("Assignment")
-    .select("id, title, instructions, starterCode, expectedOutput, courseId")
+    .select(
+      "id, title, instructions, starterCode, expectedOutput, courseId, order",
+    )
     .eq("id", id)
     .maybeSingle();
   if (error || !row) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+  if (
+    session.role === "STUDENT" &&
+    !(await studentMayAccessAssignmentOrder(
+      session.sub,
+      row.courseId,
+      row.order,
+    ))
+  ) {
+    return NextResponse.json({ error: "sequence_locked" }, { status: 403 });
   }
   const { data: course } = await supabase
     .from("Course")
