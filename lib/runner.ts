@@ -1,4 +1,5 @@
 import vm from "node:vm";
+import { normalizeOutput } from "./normalizeOutput";
 
 export function runStudentCode(code: string): {
   ok: boolean;
@@ -29,6 +30,4 @@ export function runStudentCode(code: string): {
   }
 }
 
-export function normalizeOutput(s: string) {
-  return s.replace(/\r\n/g, "\n").trim();
-}
+export { normalizeOutput };

@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "@/i18n/routing";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
-import { normalizeOutput } from "@/lib/runner";
+import { normalizeOutput } from "@/lib/normalizeOutput";
 import type { AssignmentEditorLanguage } from "@/lib/assignmentMode";
 
 function MonacoEditorLoading() {
