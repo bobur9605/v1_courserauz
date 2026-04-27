@@ -1,5 +1,5 @@
 import createMiddleware from "next-intl/middleware";
-import { jwtVerify } from "jose";
+import { jwtVerify } from "jose/jwt/verify";
 import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "./i18n/routing";
 
