@@ -25,9 +25,9 @@ export async function SiteHeader() {
             <div className="flex items-center gap-4 sm:gap-5">
               <ExploreNav
                 loggedIn={!!session}
-                isAdmin={session?.role === "ADMIN"}
+                isAdmin={session?.role === "SUPERADMIN"}
                 showTeacherPanel={
-                  session?.role === "TEACHER" || session?.role === "ADMIN"
+                  session?.role === "TEACHER" || session?.role === "SUPERADMIN"
                 }
               />
               <Link

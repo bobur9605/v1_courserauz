@@ -4,7 +4,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { normalizeOutput, runStudentCode } from "@/lib/runner";
 import { newId } from "@/lib/ids";
-import { inferAssignmentLanguageFromCourseTitle } from "@/lib/assignmentMode";
 import { bypassesAssignmentSequence } from "@/lib/assignmentGating";
 import { studentMayAccessAssignmentOrder } from "@/lib/assignmentGatingServer";
 
@@ -42,7 +41,7 @@ export async function POST(req: Request) {
     const supabase = createAdminClient();
     const { data: assignment, error: aErr } = await supabase
       .from("Assignment")
-      .select("id, expectedOutput, courseId, order")
+      .select("id, expectedOutput, courseId, order, language")
       .eq("id", body.assignmentId)
       .maybeSingle();
     if (aErr || !assignment) {
@@ -58,12 +57,7 @@ export async function POST(req: Request) {
     ) {
       return NextResponse.json({ error: "sequence_locked" }, { status: 403 });
     }
-    const { data: course } = await supabase
-      .from("Course")
-      .select("title")
-      .eq("id", assignment.courseId)
-      .maybeSingle();
-    const language = inferAssignmentLanguageFromCourseTitle(course?.title ?? "");
+    const language = assignment.language ?? "javascript";
 
     if (session.role === "STUDENT") {
       const { data: enrollment } = await supabase

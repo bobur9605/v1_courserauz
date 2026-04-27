@@ -4,15 +4,15 @@ import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { canManageCourseContent } from "@/lib/coursePermissions";
-import { localizeAssignment, localizeCourse } from "@/lib/sampleCurriculumI18n";
 import { TeacherResourcesSection } from "@/components/TeacherResourcesSection";
+import { TeacherAssignmentsList } from "@/components/TeacherAssignmentsList";
 
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ locale: string; courseId: string }> };
 
 export default async function TeacherCoursePage(props: Props) {
-  const { courseId, locale } = await props.params;
+  const { courseId } = await props.params;
   const session = await getSession();
   if (!session) {
     const loc = await getLocale();
@@ -34,16 +34,13 @@ export default async function TeacherCoursePage(props: Props) {
 
   const t = await getTranslations("teacher");
   const tc = await getTranslations("course");
-  const localizedCourse = localizeCourse(locale, course);
 
   const { data: assignmentsRaw } = await supabase
     .from("Assignment")
     .select("id, title, order")
     .eq("courseId", courseId)
     .order("order", { ascending: true });
-  const assignments = (assignmentsRaw ?? []).map((a) =>
-    localizeAssignment(locale, { ...a, instructions: "" }),
-  );
+  const assignments = assignmentsRaw ?? [];
 
   const { data: enrollRows } = await supabase
     .from("Enrollment")
@@ -89,7 +86,7 @@ export default async function TeacherCoursePage(props: Props) {
             ← {t("title")}
           </Link>
           <h1 className="mt-3 text-2xl font-bold text-[#1c1d1f] md:text-3xl">
-            {localizedCourse.title}
+            {course.title}
           </h1>
         </div>
 
@@ -112,24 +109,7 @@ export default async function TeacherCoursePage(props: Props) {
           <h2 className="border-b border-[#e0e0e0] px-6 py-4 text-lg font-bold">
             {t("assignmentsList")}
           </h2>
-          <ul className="divide-y divide-[#e0e0e0]">
-            {assignments.map((a, i) => (
-              <li
-                key={a.id}
-                className="flex flex-wrap items-center justify-between gap-2 px-6 py-3"
-              >
-                <span className="text-sm font-semibold text-[#1c1d1f]">
-                  {i + 1}. {a.title}
-                </span>
-                <Link
-                  href={`/courses/${courseId}/assignment/${a.id}`}
-                  className="text-sm font-semibold text-[#0056d2] hover:underline"
-                >
-                  {tc("start")}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <TeacherAssignmentsList courseId={courseId} assignments={assignments} />
           {assignments.length === 0 && (
             <p className="px-6 py-8 text-center text-sm text-[#6a6f73]">
               {t("noAssignments")}

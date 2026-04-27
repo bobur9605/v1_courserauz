@@ -2,13 +2,12 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link, redirect } from "@/i18n/routing";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
-import { localizeAssignment, localizeCourse } from "@/lib/sampleCurriculumI18n";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || session.role !== "SUPERADMIN") {
     const locale = await getLocale();
     return redirect({ href: "/dashboard", locale });
   }
@@ -66,12 +65,9 @@ export default async function AdminPage() {
     asgns.map((a) => [
       a.id,
       {
-        title: localizeAssignment(locale, { ...a, instructions: "" }).title,
+        title: a.title,
         course: {
-          title: localizeCourse(locale, {
-            title: courseById[a.courseId]?.title ?? "",
-            description: "",
-          }).title,
+          title: courseById[a.courseId]?.title ?? "",
         },
       },
     ]),
@@ -90,6 +86,12 @@ export default async function AdminPage() {
             className="rounded-md bg-[#0056d2] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00419e]"
           >
             {t("newCourse")}
+          </Link>
+          <Link
+            href="/admin/teachers/new"
+            className="rounded-md border border-[#0056d2] bg-white px-4 py-2 text-sm font-semibold text-[#0056d2] hover:bg-[#eef5ff]"
+          >
+            {t("newTeacher")}
           </Link>
         </div>
       </div>

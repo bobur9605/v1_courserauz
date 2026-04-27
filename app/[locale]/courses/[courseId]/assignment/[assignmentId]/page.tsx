@@ -4,8 +4,6 @@ import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { AssignmentWorkspace } from "@/components/AssignmentWorkspace";
-import { localizeAssignment, localizeCourse } from "@/lib/sampleCurriculumI18n";
-import { inferAssignmentLanguageFromCourseTitle } from "@/lib/assignmentMode";
 import { studentMayAccessAssignmentOrder } from "@/lib/assignmentGatingServer";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +20,7 @@ export default async function AssignmentPage(props: Props) {
   const { data: row, error } = await supabase
     .from("Assignment")
     .select(
-      "id, title, instructions, starterCode, expectedOutput, courseId, order",
+      "id, title, instructions, starterCode, expectedOutput, courseId, order, language",
     )
     .eq("id", assignmentId)
     .eq("courseId", courseId)
@@ -47,13 +45,8 @@ export default async function AssignmentPage(props: Props) {
     .select("title")
     .eq("id", row.courseId)
     .maybeSingle();
-  const localizedAssignment = localizeAssignment(locale, row);
-  const localizedCourseTitle = courseRow
-    ? localizeCourse(locale, { ...courseRow, description: "" }).title
-    : "";
-  const editorLanguage = inferAssignmentLanguageFromCourseTitle(
-    courseRow?.title ?? "",
-  );
+  const courseTitle = courseRow?.title ?? "";
+  const editorLanguage = row.language ?? "javascript";
 
   const { data: result } = session
     ? await supabase
@@ -74,9 +67,9 @@ export default async function AssignmentPage(props: Props) {
           {t("back")}
         </Link>
         <h1 className="mt-3 text-2xl font-bold text-[#1c1d1f] md:text-3xl">
-          {localizedAssignment.title}
+          {row.title}
         </h1>
-        <p className="mt-2 text-sm text-[#6a6f73]">{localizedCourseTitle}</p>
+        <p className="mt-2 text-sm text-[#6a6f73]">{courseTitle}</p>
       </div>
 
       <section className="rounded-xl border border-[#e0e0e0] bg-white p-6 shadow-sm">
@@ -84,14 +77,14 @@ export default async function AssignmentPage(props: Props) {
           {t("instructions")}
         </h2>
         <p className="mt-3 whitespace-pre-wrap text-[#1c1d1f]">
-          {localizedAssignment.instructions}
+          {row.instructions}
         </p>
       </section>
 
       {session ? (
         <AssignmentWorkspace
           assignmentId={row.id}
-          starterCode={localizedAssignment.starterCode}
+          starterCode={row.starterCode}
           expectedOutput={row.expectedOutput}
           initialCode={result?.submittedCode}
           existingScore={result?.score}

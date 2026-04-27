@@ -54,7 +54,7 @@ const createSchema = z.object({
 
 export async function POST(req: Request) {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || session.role !== "SUPERADMIN") {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   try {

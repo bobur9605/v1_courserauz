@@ -17,7 +17,7 @@ async function assertCourseRead(
     .eq("id", courseId)
     .maybeSingle();
   if (!course) return { ok: false as const, status: 404, supabase };
-  if (session.role === "ADMIN" || canManageCourseContent(session, course.teacherId)) {
+  if (session.role === "SUPERADMIN" || canManageCourseContent(session, course.teacherId)) {
     return { ok: true as const, supabase };
   }
   if (session.role !== "STUDENT") return { ok: false as const, status: 403, supabase };

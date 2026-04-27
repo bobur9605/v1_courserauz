@@ -11,6 +11,7 @@ const schema = z.object({
   instructions: z.string().optional(),
   starterCode: z.string(),
   expectedOutput: z.string(),
+  language: z.enum(["javascript", "html", "css"]).optional(),
 });
 
 export async function POST(req: Request) {
@@ -45,6 +46,7 @@ export async function POST(req: Request) {
         instructions: body.instructions ?? "",
         starterCode: body.starterCode,
         expectedOutput: body.expectedOutput,
+        language: body.language ?? "javascript",
         order: nextOrder,
       })
       .select("*")

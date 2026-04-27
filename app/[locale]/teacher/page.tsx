@@ -2,7 +2,6 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link, redirect } from "@/i18n/routing";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
-import { localizeCourse } from "@/lib/sampleCurriculumI18n";
 
 export const dynamic = "force-dynamic";
 
@@ -12,12 +11,11 @@ export default async function TeacherHomePage() {
     const locale = await getLocale();
     return redirect({ href: "/login", locale });
   }
-  if (session.role !== "TEACHER" && session.role !== "ADMIN") {
+  if (session.role !== "TEACHER" && session.role !== "SUPERADMIN") {
     const locale = await getLocale();
     return redirect({ href: "/dashboard", locale });
   }
 
-  const locale = await getLocale();
   const t = await getTranslations("teacher");
   const tc = await getTranslations("courses");
   const supabase = createAdminClient();
@@ -42,13 +40,12 @@ export default async function TeacherHomePage() {
         </h2>
         <ul className="divide-y divide-[#e0e0e0]">
           {courses.map((c) => {
-            const loc = localizeCourse(locale, c);
             return (
               <li
                 key={c.id}
                 className="flex flex-wrap items-center justify-between gap-3 px-6 py-4"
               >
-                <p className="font-semibold text-[#1c1d1f]">{loc.title}</p>
+                <p className="font-semibold text-[#1c1d1f]">{c.title}</p>
                 <Link
                   href={`/teacher/courses/${c.id}`}
                   className="text-sm font-semibold text-[#0056d2] hover:underline"

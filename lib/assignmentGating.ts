@@ -1,7 +1,7 @@
 import type { SessionPayload } from "@/lib/auth";
 
 export function bypassesAssignmentSequence(session: SessionPayload | null): boolean {
-  return session?.role === "ADMIN" || session?.role === "TEACHER";
+  return session?.role === "SUPERADMIN" || session?.role === "TEACHER";
 }
 
 type AssignmentRow = { id: string; order: number };

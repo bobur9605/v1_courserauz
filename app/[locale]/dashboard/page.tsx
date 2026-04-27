@@ -2,7 +2,6 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { Link, redirect } from "@/i18n/routing";
-import { localizeAssignment, localizeCourse } from "@/lib/sampleCurriculumI18n";
 
 export const dynamic = "force-dynamic";
 
@@ -84,11 +83,8 @@ export default async function DashboardPage() {
     asgns.map((a) => [
       a.id,
       {
-        title: localizeAssignment(locale, { ...a, instructions: "" }).title,
-        courseTitle: localizeCourse(locale, {
-          title: courseById[a.courseId]?.title ?? "",
-          description: "",
-        }).title,
+        title: a.title,
+        courseTitle: courseById[a.courseId]?.title ?? "",
       },
     ]),
   );
@@ -111,10 +107,6 @@ export default async function DashboardPage() {
         ) : (
           <ul className="divide-y divide-[#e0e0e0]">
             {myCourses.map((c) => {
-              const loc = localizeCourse(locale, {
-                title: c.title,
-                description: "",
-              });
               const pr = progressByCourse[c.id] ?? { done: 0, total: 0 };
               const pct = pr.total ? Math.round((pr.done / pr.total) * 100) : 0;
               return (
@@ -123,7 +115,7 @@ export default async function DashboardPage() {
                   className="flex flex-wrap items-center justify-between gap-3 px-6 py-4"
                 >
                   <div>
-                    <p className="font-semibold text-[#1c1d1f]">{loc.title}</p>
+                    <p className="font-semibold text-[#1c1d1f]">{c.title}</p>
                     <p className="text-xs text-[#6a6f73]">
                       {t("progressLabel", {
                         done: String(pr.done),

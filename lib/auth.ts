@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 const COOKIE = "wdedu_session";
 
-export type Role = "ADMIN" | "TEACHER" | "STUDENT";
+export type Role = "SUPERADMIN" | "TEACHER" | "STUDENT";
 const getSecret = () => {
   const s = process.env.JWT_SECRET;
   if (!s) throw new Error("JWT_SECRET is not set");
@@ -14,6 +14,7 @@ export type SessionPayload = {
   role: Role;
   email: string;
   fullName: string;
+  mustChangePassword?: boolean;
 };
 
 export async function signSession(payload: SessionPayload) {
@@ -21,6 +22,7 @@ export async function signSession(payload: SessionPayload) {
     role: payload.role,
     email: payload.email,
     fullName: payload.fullName,
+    mustChangePassword: payload.mustChangePassword ?? false,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(payload.sub)
@@ -59,9 +61,15 @@ export async function getSession(): Promise<SessionPayload | null> {
       return null;
     }
     if (
-      payload.role !== "ADMIN" &&
+      payload.role !== "SUPERADMIN" &&
       payload.role !== "TEACHER" &&
       payload.role !== "STUDENT"
+    ) {
+      return null;
+    }
+    if (
+      payload.mustChangePassword !== undefined &&
+      typeof payload.mustChangePassword !== "boolean"
     ) {
       return null;
     }
@@ -70,6 +78,7 @@ export async function getSession(): Promise<SessionPayload | null> {
       role: payload.role,
       email: payload.email,
       fullName: payload.fullName,
+      mustChangePassword: payload.mustChangePassword,
     };
   } catch {
     return null;

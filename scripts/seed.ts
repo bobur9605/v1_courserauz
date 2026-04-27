@@ -45,7 +45,7 @@ async function main() {
     supabase,
     "admin@wdedu.uz",
     "Demo Admin",
-    "ADMIN",
+    "SUPERADMIN",
     password,
   );
   const teacherId = await ensureUser(

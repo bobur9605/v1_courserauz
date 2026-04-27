@@ -5,7 +5,7 @@ import { routing } from "./i18n/routing";
 
 const intl = createMiddleware(routing);
 
-const PROTECTED_PREFIXES = ["/dashboard", "/teacher"];
+const PROTECTED_PREFIXES = ["/dashboard", "/teacher", "/force-change-password"];
 const ADMIN_PREFIXES = ["/admin"];
 
 function pathnameWithoutLocale(pathname: string) {
@@ -35,6 +35,10 @@ export default async function middleware(req: NextRequest) {
   const currentLocale = localeMatch?.[1] ?? routing.defaultLocale;
   const loginPath =
     currentLocale === routing.defaultLocale ? "/login" : `/${currentLocale}/login`;
+  const forceChangePath =
+    currentLocale === routing.defaultLocale
+      ? "/force-change-password"
+      : `/${currentLocale}/force-change-password`;
 
   if (needsAuth || needsAdmin) {
     if (!token) {
@@ -50,7 +54,14 @@ export default async function middleware(req: NextRequest) {
         token,
         new TextEncoder().encode(process.env.JWT_SECRET),
       );
-      if (needsAdmin && payload.role !== "ADMIN") {
+      if (
+        payload.mustChangePassword === true &&
+        bare !== "/force-change-password"
+      ) {
+        url.pathname = forceChangePath;
+        return NextResponse.redirect(url);
+      }
+      if (needsAdmin && payload.role !== "SUPERADMIN") {
         const dash =
           currentLocale === routing.defaultLocale
             ? "/dashboard"
@@ -62,7 +73,7 @@ export default async function middleware(req: NextRequest) {
       if (
         onTeacher &&
         payload.role !== "TEACHER" &&
-        payload.role !== "ADMIN"
+        payload.role !== "SUPERADMIN"
       ) {
         const dash =
           currentLocale === routing.defaultLocale

@@ -13,6 +13,7 @@ export default function TeacherNewAssignmentPage() {
   const courseId = String(params.courseId ?? "");
   const [title, setTitle] = useState("");
   const [instructions, setInstructions] = useState("");
+  const [language, setLanguage] = useState("javascript");
   const [starterCode, setStarterCode] = useState("// your code\n");
   const [expectedOutput, setExpectedOutput] = useState("");
   const [error, setError] = useState(false);
@@ -29,6 +30,7 @@ export default function TeacherNewAssignmentPage() {
         courseId,
         title,
         instructions,
+        language,
         starterCode,
         expectedOutput,
       }),
@@ -75,6 +77,18 @@ export default function TeacherNewAssignmentPage() {
             onChange={(e) => setInstructions(e.target.value)}
             className="mt-1 w-full rounded-md border border-[#e0e0e0] px-3 py-2 text-sm"
           />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold">{tf("assignmentLanguage")}</label>
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            className="mt-1 w-full rounded-md border border-[#e0e0e0] px-3 py-2 text-sm"
+          >
+            <option value="javascript">JavaScript</option>
+            <option value="html">HTML</option>
+            <option value="css">CSS</option>
+          </select>
         </div>
         <div>
           <label className="block text-sm font-semibold">{tf("starterCode")}</label>

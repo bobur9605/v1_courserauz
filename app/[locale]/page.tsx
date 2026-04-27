@@ -2,7 +2,6 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { HomeFAQ } from "@/components/HomeFAQ";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { localizeCourse } from "@/lib/sampleCurriculumI18n";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +23,7 @@ export default async function HomePage() {
     .from("Course")
     .select("*")
     .order("createdAt", { ascending: true });
-  const courses = (coursesRaw ?? []).map((c) => localizeCourse(locale, c));
+  const courses = coursesRaw ?? [];
   const { data: assignmentsRaw } = await supabase
     .from("Assignment")
     .select("*");

@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { EnrollButton } from "@/components/EnrollButton";
-import { localizeAssignment, localizeCourse } from "@/lib/sampleCurriculumI18n";
 import { assignmentLockMap } from "@/lib/assignmentGating";
 import { CourseResourcesList } from "@/components/CourseResourcesList";
 
@@ -39,10 +38,7 @@ export default async function CourseDetailPage(props: Props) {
     id: a.id,
     order: a.order,
   }));
-  const assignments = (assignmentsRaw ?? []).map((a) =>
-    localizeAssignment(locale, { ...a, instructions: "" }),
-  );
-  const localizedCourse = localizeCourse(locale, course);
+  const assignments = assignmentsRaw ?? [];
 
   let resultsMap: Record<string, { passed: boolean; score: number | null }> =
     {};
@@ -89,10 +85,10 @@ export default async function CourseDetailPage(props: Props) {
             {t("back")}
           </Link>
           <h1 className="mt-2 text-3xl font-bold text-[#1c1d1f]">
-            {localizedCourse.title}
+            {course.title}
           </h1>
           <p className="mt-3 max-w-3xl text-[#6a6f73]">
-            {localizedCourse.description}
+            {course.description}
           </p>
         </div>
         {session?.role === "STUDENT" && (
@@ -156,7 +152,7 @@ export default async function CourseDetailPage(props: Props) {
                     </span>
                   ) : (
                     <Link
-                      href={`/courses/${localizedCourse.id}/assignment/${a.id}`}
+                      href={`/courses/${course.id}/assignment/${a.id}`}
                       className={rowClass}
                     >
                       <span className="truncate pr-2">
@@ -203,7 +199,7 @@ export default async function CourseDetailPage(props: Props) {
                       </span>
                     ) : (
                       <Link
-                        href={`/courses/${localizedCourse.id}/assignment/${a.id}`}
+                        href={`/courses/${course.id}/assignment/${a.id}`}
                         className="rounded bg-[#0056d2] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00419e]"
                       >
                         {t("start")}

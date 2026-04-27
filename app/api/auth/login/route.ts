@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     const supabase = createAdminClient();
     const { data: user, error } = await supabase
       .from("User")
-      .select("id, email, fullName, role, passwordHash")
+      .select("id, email, fullName, role, passwordHash, mustChangePassword")
       .eq("email", body.email)
       .maybeSingle();
     if (error || !user) {
@@ -30,6 +30,7 @@ export async function POST(req: Request) {
       role: user.role as Role,
       email: user.email,
       fullName: user.fullName,
+      mustChangePassword: !!user.mustChangePassword,
     });
     return NextResponse.json({ ok: true, role: user.role });
   } catch {

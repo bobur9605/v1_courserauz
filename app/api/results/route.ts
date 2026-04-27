@@ -10,7 +10,7 @@ export async function GET() {
 
   const supabase = createAdminClient();
 
-  if (session.role === "ADMIN") {
+  if (session.role === "SUPERADMIN") {
     const { data: rows } = await supabase
       .from("Result")
       .select("*")

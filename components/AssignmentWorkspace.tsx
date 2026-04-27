@@ -1,17 +1,26 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { loader } from "@monaco-editor/react";
-import * as monaco from "monaco-editor";
 import { useRouter } from "@/i18n/routing";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 import { normalizeOutput } from "@/lib/runner";
 import type { AssignmentEditorLanguage } from "@/lib/assignmentMode";
 
-loader.config({ monaco });
+function MonacoEditorLoading() {
+  const t = useTranslations("assignment");
+  return (
+    <div className="flex h-[500px] min-h-[320px] items-center justify-center bg-[#f9fafb] text-sm text-[#6a6f73]">
+      {t("editorLoading")}
+    </div>
+  );
+}
 
-const Monaco = dynamic(() => import("@monaco-editor/react"), { ssr: false });
+/** Default @monaco-editor/react loader (CDN) avoids Turbopack/webpack worker issues from bundling `monaco-editor`. */
+const Monaco = dynamic(() => import("@monaco-editor/react").then((m) => m.default), {
+  ssr: false,
+  loading: () => <MonacoEditorLoading />,
+});
 
 type Props = {
   assignmentId: string;
@@ -112,6 +121,8 @@ export function AssignmentWorkspace({
           setMsg(t("needEnroll"));
         } else if (data.error === "not_found") {
           setMsg(t("notFound"));
+        } else if (data.error === "sequence_locked") {
+          setMsg(t("sequenceLocked"));
         } else {
           setMsg(t("submitError"));
         }
@@ -144,14 +155,16 @@ export function AssignmentWorkspace({
           </span>
         </div>
 
-        <div className="h-[500px]">
+        <div className="h-[500px] min-h-[320px] w-full">
           <Monaco
-            height="100%"
+            height={500}
+            width="100%"
             language={editorLanguage}
             theme="vs-light"
             value={code}
             onChange={(v) => setCode(v ?? "")}
             options={options}
+            path="main.js"
           />
         </div>
 
