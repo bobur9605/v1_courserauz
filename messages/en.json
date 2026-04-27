@@ -244,6 +244,8 @@
     "duration": "Duration (hours)",
     "difficulty": "Difficulty",
     "selectCourse": "Select course",
+    "fullName": "Full name",
+    "email": "Email",
     "assignmentTitle": "Assignment title",
     "assignmentLanguage": "Language",
     "instructions": "Instructions",

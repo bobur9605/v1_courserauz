@@ -244,6 +244,8 @@
     "duration": "Длительность (часы)",
     "difficulty": "Уровень",
     "selectCourse": "Выберите курс",
+    "fullName": "Полное имя",
+    "email": "Email",
     "assignmentTitle": "Название задания",
     "assignmentLanguage": "Язык",
     "instructions": "Инструкция",

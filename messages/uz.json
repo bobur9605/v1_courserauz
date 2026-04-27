@@ -244,6 +244,8 @@
     "duration": "Davomiylik (soat)",
     "difficulty": "Murakkablik",
     "selectCourse": "Kursni tanlang",
+    "fullName": "To‘liq ism",
+    "email": "Email",
     "assignmentTitle": "Topshiriq nomi",
     "assignmentLanguage": "Til",
     "instructions": "Ko‘rsatma",
