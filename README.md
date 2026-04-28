@@ -36,6 +36,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 | Role     | Email              | Password   |
 |----------|--------------------|------------|
+| Superadmin | `admin@wdedu.uz`   | `demo1234` |
 | Teacher  | `teacher@wdedu.uz` | `demo1234` |
 | Student  | `student@wdedu.uz` | `demo1234` |
 
