@@ -54,6 +54,26 @@ export async function POST(req: Request) {
     if (error || !assignment) {
       return NextResponse.json({ error: "bad_request" }, { status: 400 });
     }
+    const { data: lesson } = await supabase
+      .from("Lesson")
+      .select("id")
+      .eq("assignmentId", assignment.id)
+      .maybeSingle();
+    if (!lesson) {
+      const lessonId = newId();
+      const { error: lessonError } = await supabase.from("Lesson").insert({
+        id: lessonId,
+        courseId: body.courseId,
+        assignmentId: assignment.id,
+        title: body.title,
+        content: body.instructions ?? "",
+        order: nextOrder,
+        isPublished: true,
+      });
+      if (!lessonError) {
+        await supabase.from("Assignment").update({ lessonId }).eq("id", assignment.id);
+      }
+    }
     return NextResponse.json(assignment);
   } catch {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });

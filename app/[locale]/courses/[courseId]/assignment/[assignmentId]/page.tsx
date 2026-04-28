@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { AssignmentWorkspace } from "@/components/AssignmentWorkspace";
-import { studentMayAccessAssignmentOrder } from "@/lib/assignmentGatingServer";
+import { studentMayAccessLessonOrder } from "@/lib/lessonGatingServer";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +20,7 @@ export default async function AssignmentPage(props: Props) {
   const { data: row, error } = await supabase
     .from("Assignment")
     .select(
-      "id, title, instructions, starterCode, expectedOutput, courseId, order, language",
+      "id, title, instructions, starterCode, expectedOutput, courseId, order, language, lessonId",
     )
     .eq("id", assignmentId)
     .eq("courseId", courseId)
@@ -29,12 +29,20 @@ export default async function AssignmentPage(props: Props) {
   if (error || !row) notFound();
 
   const session = await getSession();
+  const { data: lesson } = row.lessonId
+    ? await supabase
+        .from("Lesson")
+        .select("id, order")
+        .eq("id", row.lessonId)
+        .maybeSingle()
+    : { data: null };
   if (
     session?.role === "STUDENT" &&
-    !(await studentMayAccessAssignmentOrder(
+    lesson &&
+    !(await studentMayAccessLessonOrder(
       session.sub,
       row.courseId,
-      row.order,
+      lesson.order,
     ))
   ) {
     redirect({ href: `/courses/${courseId}?locked=1`, locale });

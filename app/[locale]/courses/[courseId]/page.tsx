@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { EnrollButton } from "@/components/EnrollButton";
-import { assignmentLockMap } from "@/lib/assignmentGating";
+import { lessonLockMap } from "@/lib/lessonGating";
 import { CourseResourcesList } from "@/components/CourseResourcesList";
 
 export const dynamic = "force-dynamic";
@@ -29,23 +29,24 @@ export default async function CourseDetailPage(props: Props) {
     .maybeSingle();
   if (error || !course) notFound();
 
-  const { data: assignmentsRaw } = await supabase
-    .from("Assignment")
-    .select("id, title, order")
+  const { data: lessonsRaw } = await supabase
+    .from("Lesson")
+    .select("id, title, order, assignmentId, isPublished")
     .eq("courseId", courseId)
     .order("order", { ascending: true });
-  const assignmentsForLock = (assignmentsRaw ?? []).map((a) => ({
-    id: a.id,
-    order: a.order,
+  const lessonsForLock = (lessonsRaw ?? []).map((l) => ({
+    id: l.id,
+    order: l.order,
   }));
-  const assignments = assignmentsRaw ?? [];
+  const lessons = lessonsRaw ?? [];
 
   let resultsMap: Record<string, { passed: boolean; score: number | null }> =
     {};
   let isEnrolled = false;
 
   if (session) {
-    const assignmentIds = assignments.map((a) => a.id);
+    const assignmentIds = lessons.map((l) => l.assignmentId).filter(Boolean);
+    const lessonIds = lessons.map((l) => l.id);
     const { data: enRow } = await supabase
       .from("Enrollment")
       .select("id")
@@ -60,18 +61,38 @@ export default async function CourseDetailPage(props: Props) {
           .eq("studentId", session.sub)
           .in("assignmentId", assignmentIds)
       : { data: [] as { assignmentId: string; passed: boolean; score: number | null }[] };
-    resultsMap = Object.fromEntries(
+    const { data: completionRows } = lessonIds.length
+      ? await supabase
+          .from("LessonCompletion")
+          .select("lessonId")
+          .eq("studentId", session.sub)
+          .in("lessonId", lessonIds)
+      : { data: [] as { lessonId: string }[] };
+    const resultByAssignment = Object.fromEntries(
       (resultRows ?? []).map((r) => [
         r.assignmentId,
         { passed: r.passed, score: r.score },
       ]),
     );
+    const completedLessonSet = new Set((completionRows ?? []).map((r) => r.lessonId));
+    resultsMap = Object.fromEntries(
+      lessons.map((lesson) => {
+        const result = lesson.assignmentId ? resultByAssignment[lesson.assignmentId] : null;
+        return [
+          lesson.id,
+          {
+            passed: lesson.assignmentId ? !!result?.passed : completedLessonSet.has(lesson.id),
+            score: result?.score ?? null,
+          },
+        ];
+      }),
+    );
   }
 
-  const lockById = assignmentLockMap(assignmentsForLock, resultsMap, session);
+  const lockById = lessonLockMap(lessonsForLock, resultsMap, session);
 
-  const total = assignments.length;
-  const done = assignments.filter((a) => resultsMap[a.id]?.passed).length;
+  const total = lessons.length;
+  const done = lessons.filter((a) => resultsMap[a.id]?.passed).length;
   const pct = total ? Math.round((done / total) * 100) : 0;
 
   return (
@@ -133,7 +154,7 @@ export default async function CourseDetailPage(props: Props) {
             {t("modules")}
           </h2>
           <ol className="mt-4 space-y-2">
-            {assignments.map((a, i) => {
+            {lessons.map((a, i) => {
               const r = resultsMap[a.id];
               const locked = !!lockById[a.id];
               const rowClass = `flex items-center justify-between rounded-lg px-3 py-2 text-sm font-semibold ${
@@ -152,7 +173,7 @@ export default async function CourseDetailPage(props: Props) {
                     </span>
                   ) : (
                     <Link
-                      href={`/courses/${course.id}/assignment/${a.id}`}
+                      href={`/courses/${course.id}/lessons/${a.id}`}
                       className={rowClass}
                     >
                       <span className="truncate pr-2">
@@ -167,18 +188,18 @@ export default async function CourseDetailPage(props: Props) {
               );
             })}
           </ol>
-          {assignments.length === 0 && (
+          {lessons.length === 0 && (
             <p className="mt-2 text-sm text-[#6a6f73]">{t("noAssignments")}</p>
           )}
         </aside>
 
         <div className="space-y-4 rounded-xl border border-[#e0e0e0] bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold text-[#1c1d1f]">{t("modules")}</h2>
-          {assignments.length === 0 ? (
+          {lessons.length === 0 ? (
             <p className="text-sm text-[#6a6f73]">{t("noAssignments")}</p>
           ) : (
             <ul className="divide-y divide-[#e0e0e0]">
-              {assignments.map((a, i) => {
+              {lessons.map((a, i) => {
                 const locked = !!lockById[a.id];
                 return (
                   <li
@@ -190,7 +211,7 @@ export default async function CourseDetailPage(props: Props) {
                         {i + 1}. {a.title}
                       </p>
                       <p className="text-xs text-[#6a6f73]">
-                        {locked ? t("locked") : t("assignment")}
+                        {locked ? t("locked") : "Lesson"}
                       </p>
                     </div>
                     {locked ? (
@@ -199,10 +220,10 @@ export default async function CourseDetailPage(props: Props) {
                       </span>
                     ) : (
                       <Link
-                        href={`/courses/${course.id}/assignment/${a.id}`}
+                        href={`/courses/${course.id}/lessons/${a.id}`}
                         className="rounded bg-[#0056d2] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00419e]"
                       >
-                        {t("start")}
+                        Open
                       </Link>
                     )}
                   </li>

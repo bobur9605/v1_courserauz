@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
-import { studentMayAccessAssignmentOrder } from "@/lib/assignmentGatingServer";
+import { studentMayAccessLessonOrder } from "@/lib/lessonGatingServer";
 import { z } from "zod";
 import { canManageCourseContent } from "@/lib/coursePermissions";
 
@@ -18,19 +18,27 @@ export async function GET(_req: Request, ctx: Ctx) {
   const { data: row, error } = await supabase
     .from("Assignment")
     .select(
-      "id, title, instructions, starterCode, expectedOutput, courseId, order, language",
+      "id, title, instructions, starterCode, expectedOutput, courseId, order, language, lessonId",
     )
     .eq("id", id)
     .maybeSingle();
   if (error || !row) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
+  const { data: lesson } = row.lessonId
+    ? await supabase
+        .from("Lesson")
+        .select("order")
+        .eq("id", row.lessonId)
+        .maybeSingle()
+    : { data: null };
   if (
     session.role === "STUDENT" &&
-    !(await studentMayAccessAssignmentOrder(
+    lesson &&
+    !(await studentMayAccessLessonOrder(
       session.sub,
       row.courseId,
-      row.order,
+      lesson.order,
     ))
   ) {
     return NextResponse.json({ error: "sequence_locked" }, { status: 403 });

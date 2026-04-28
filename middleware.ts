@@ -26,8 +26,9 @@ export default async function middleware(req: NextRequest) {
   const token = req.cookies.get("wdedu_session")?.value;
   const needsAssignmentAuth =
     bare.startsWith("/courses/") && bare.includes("/assignment/");
+  const needsLessonAuth = bare.startsWith("/courses/") && bare.includes("/lessons/");
   const needsAuth =
-    PROTECTED_PREFIXES.some((p) => bare.startsWith(p)) || needsAssignmentAuth;
+    PROTECTED_PREFIXES.some((p) => bare.startsWith(p)) || needsAssignmentAuth || needsLessonAuth;
   const needsAdmin = ADMIN_PREFIXES.some((p) => bare.startsWith(p));
 
   const url = req.nextUrl.clone();

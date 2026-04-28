@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { canManageCourseContent } from "@/lib/coursePermissions";
 import { TeacherResourcesSection } from "@/components/TeacherResourcesSection";
-import { TeacherAssignmentsList } from "@/components/TeacherAssignmentsList";
+import { TeacherLessonsManager } from "@/components/TeacherLessonsManager";
 
 export const dynamic = "force-dynamic";
 
@@ -35,12 +35,12 @@ export default async function TeacherCoursePage(props: Props) {
   const t = await getTranslations("teacher");
   const tc = await getTranslations("course");
 
-  const { data: assignmentsRaw } = await supabase
-    .from("Assignment")
-    .select("id, title, order")
+  const { data: lessonsRaw } = await supabase
+    .from("Lesson")
+    .select("id, title, content, order, isPublished, assignmentId")
     .eq("courseId", courseId)
     .order("order", { ascending: true });
-  const assignments = assignmentsRaw ?? [];
+  const lessons = lessonsRaw ?? [];
 
   const { data: enrollRows } = await supabase
     .from("Enrollment")
@@ -53,25 +53,35 @@ export default async function TeacherCoursePage(props: Props) {
         .select("id, fullName, email")
         .in("id", userIds)
     : { data: [] };
-  const { data: allResults } = userIds.length
+  const assignmentIds = lessons.map((l) => l.assignmentId).filter(Boolean);
+  const { data: allResults } = userIds.length && assignmentIds.length
     ? await supabase
         .from("Result")
         .select("studentId, assignmentId, passed")
         .in("studentId", userIds)
+        .in("assignmentId", assignmentIds)
+    : { data: [] };
+  const lessonIds = lessons.map((l) => l.id);
+  const { data: allCompletions } = userIds.length && lessonIds.length
+    ? await supabase
+        .from("LessonCompletion")
+        .select("studentId, lessonId")
+        .in("studentId", userIds)
+        .in("lessonId", lessonIds)
     : { data: [] };
 
-  const assignmentIds = assignments.map((a) => a.id);
-  const resultsByStudent = new Map<
-    string,
-    { passed: Set<string> }
-  >();
+  const resultsByStudent = new Map<string, { passed: Set<string>; completed: Set<string> }>();
   for (const uid of userIds) {
-    resultsByStudent.set(uid, { passed: new Set() });
+    resultsByStudent.set(uid, { passed: new Set(), completed: new Set() });
   }
   for (const r of allResults ?? []) {
     if (!r.passed) continue;
     const entry = resultsByStudent.get(r.studentId);
     if (entry) entry.passed.add(r.assignmentId);
+  }
+  for (const row of allCompletions ?? []) {
+    const entry = resultsByStudent.get(row.studentId);
+    if (entry) entry.completed.add(row.lessonId);
   }
 
   const userById = Object.fromEntries((users ?? []).map((u) => [u.id, u]));
@@ -92,12 +102,6 @@ export default async function TeacherCoursePage(props: Props) {
 
         <div className="flex flex-wrap gap-3">
           <Link
-            href={`/teacher/courses/${courseId}/assignments/new`}
-            className="rounded-md bg-[#0056d2] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00419e]"
-          >
-            {t("newAssignment")}
-          </Link>
-          <Link
             href={`/courses/${courseId}`}
             className="rounded-md border border-[#0056d2] px-4 py-2 text-sm font-semibold text-[#0056d2] hover:bg-[#eef5ff]"
           >
@@ -107,12 +111,14 @@ export default async function TeacherCoursePage(props: Props) {
 
         <section className="rounded-xl border border-[#e0e0e0] bg-white shadow-sm">
           <h2 className="border-b border-[#e0e0e0] px-6 py-4 text-lg font-bold">
-            {t("assignmentsList")}
+            Lessons
           </h2>
-          <TeacherAssignmentsList courseId={courseId} assignments={assignments} />
-          {assignments.length === 0 && (
+          <div className="px-6 py-4">
+            <TeacherLessonsManager courseId={courseId} lessons={lessons} />
+          </div>
+          {lessons.length === 0 && (
             <p className="px-6 py-8 text-center text-sm text-[#6a6f73]">
-              {t("noAssignments")}
+              No lessons yet.
             </p>
           )}
         </section>
@@ -129,14 +135,21 @@ export default async function TeacherCoursePage(props: Props) {
                 <tr>
                   <th className="px-6 py-3">{t("student")}</th>
                   <th className="px-6 py-3">{t("progressCol")}</th>
+                  <th className="px-6 py-3">Lessons</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e0e0e0]">
                 {userIds.map((uid) => {
                   const u = userById[uid];
-                  const passedCount =
-                    resultsByStudent.get(uid)?.passed.size ?? 0;
-                  const total = assignmentIds.length;
+                  const row = resultsByStudent.get(uid);
+                  let passedCount = 0;
+                  for (const lesson of lessons) {
+                    const done = lesson.assignmentId
+                      ? row?.passed.has(lesson.assignmentId)
+                      : row?.completed.has(lesson.id);
+                    if (done) passedCount += 1;
+                  }
+                  const total = lessons.length;
                   const pct = total ? Math.round((passedCount / total) * 100) : 0;
                   return (
                     <tr key={uid} className="hover:bg-[#fafafa]">
@@ -150,6 +163,28 @@ export default async function TeacherCoursePage(props: Props) {
                       </td>
                       <td className="px-6 py-3 text-[#6a6f73]">
                         {passedCount}/{total} ({pct}%)
+                      </td>
+                      <td className="px-6 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          {lessons.map((lesson, idx) => {
+                            const done = lesson.assignmentId
+                              ? row?.passed.has(lesson.assignmentId)
+                              : row?.completed.has(lesson.id);
+                            return (
+                              <span
+                                key={lesson.id}
+                                className={`rounded px-2 py-1 text-xs font-semibold ${
+                                  done
+                                    ? "bg-emerald-100 text-emerald-800"
+                                    : "bg-[#eef2f7] text-[#6a6f73]"
+                                }`}
+                                title={lesson.title}
+                              >
+                                {idx + 1}:{done ? "P" : "N"}
+                              </span>
+                            );
+                          })}
+                        </div>
                       </td>
                     </tr>
                   );

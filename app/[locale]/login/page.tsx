@@ -38,6 +38,10 @@ export default function LoginPage() {
       window.location.assign(`${prefix}/admin`);
       return;
     }
+    if (role === "TEACHER") {
+      window.location.assign(`${prefix}/teacher`);
+      return;
+    }
     window.location.assign(`${prefix}/dashboard`);
   }
 

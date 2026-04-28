@@ -4,8 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { normalizeOutput, runStudentCode } from "@/lib/runner";
 import { newId } from "@/lib/ids";
-import { bypassesAssignmentSequence } from "@/lib/assignmentGating";
-import { studentMayAccessAssignmentOrder } from "@/lib/assignmentGatingServer";
+import { bypassesLessonSequence } from "@/lib/lessonGating";
+import { studentMayAccessLessonOrder } from "@/lib/lessonGatingServer";
 
 const schema = z.object({
   assignmentId: z.string().min(1),
@@ -41,18 +41,26 @@ export async function POST(req: Request) {
     const supabase = createAdminClient();
     const { data: assignment, error: aErr } = await supabase
       .from("Assignment")
-      .select("id, expectedOutput, courseId, order, language")
+      .select("id, expectedOutput, courseId, order, language, lessonId")
       .eq("id", body.assignmentId)
       .maybeSingle();
     if (aErr || !assignment) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
+    const { data: lesson } = assignment.lessonId
+      ? await supabase
+          .from("Lesson")
+          .select("id, order")
+          .eq("id", assignment.lessonId)
+          .maybeSingle()
+      : { data: null };
     if (
-      !bypassesAssignmentSequence(session) &&
-      !(await studentMayAccessAssignmentOrder(
+      !bypassesLessonSequence(session) &&
+      lesson &&
+      !(await studentMayAccessLessonOrder(
         session.sub,
         assignment.courseId,
-        assignment.order,
+        lesson.order,
       ))
     ) {
       return NextResponse.json({ error: "sequence_locked" }, { status: 403 });
@@ -67,14 +75,7 @@ export async function POST(req: Request) {
         .eq("courseId", assignment.courseId)
         .maybeSingle();
       if (!enrollment) {
-        const { error: enrollErr } = await supabase.from("Enrollment").insert({
-          id: newId(),
-          userId: session.sub,
-          courseId: assignment.courseId,
-        });
-        if (enrollErr) {
-          return NextResponse.json({ error: "forbidden" }, { status: 403 });
-        }
+        return NextResponse.json({ error: "forbidden" }, { status: 403 });
       }
     }
 
