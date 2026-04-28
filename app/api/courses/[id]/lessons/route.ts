@@ -25,12 +25,12 @@ export async function GET(_req: Request, ctx: Ctx) {
   }
   const supabase = createAdminClient();
 
-  const { data: course } = await supabase
+  const { data: course, error: courseError } = await supabase
     .from("Course")
-    .select("id, teacherId")
+    .select("*")
     .eq("id", courseId)
     .maybeSingle();
-  if (!course || !canManageCourseContent(session, course.teacherId)) {
+  if (courseError || !course || !canManageCourseContent(session, course.teacherId)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
@@ -51,12 +51,12 @@ export async function POST(req: Request, ctx: Ctx) {
   }
   const supabase = createAdminClient();
 
-  const { data: course } = await supabase
+  const { data: course, error: courseError } = await supabase
     .from("Course")
-    .select("id, teacherId")
+    .select("*")
     .eq("id", courseId)
     .maybeSingle();
-  if (!course || !canManageCourseContent(session, course.teacherId)) {
+  if (courseError || !course || !canManageCourseContent(session, course.teacherId)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
