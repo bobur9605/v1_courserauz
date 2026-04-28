@@ -84,15 +84,6 @@ export function ExploreNav({ loggedIn, role }: Props) {
               {t("teacherPanel")}
             </Link>
           )}
-          {isSuperadmin && (
-            <Link
-              href="/admin"
-              className="block px-4 py-2.5 text-sm font-semibold text-[#0056d2] hover:bg-[#eef5ff]"
-              onClick={() => setOpen(false)}
-            >
-              {t("adminPanel")}
-            </Link>
-          )}
         </div>
       )}
     </div>
