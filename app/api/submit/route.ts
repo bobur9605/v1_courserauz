@@ -69,6 +69,7 @@ export async function POST(req: Request) {
     const runAsJavaScript = usesJavaScriptRunner(
       assignment.language,
       assignment.starterCode,
+      assignment.expectedOutput,
     );
 
     if (session.role === "STUDENT") {

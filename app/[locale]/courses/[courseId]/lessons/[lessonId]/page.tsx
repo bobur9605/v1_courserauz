@@ -116,6 +116,7 @@ export default async function LessonPage(props: Props) {
               editorLanguage={resolveAssignmentEditorLanguage(
                 assignment.language,
                 assignment.starterCode,
+                assignment.expectedOutput,
               )}
             />
           ) : (

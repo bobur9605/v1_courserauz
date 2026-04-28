@@ -58,6 +58,7 @@ export default async function AssignmentPage(props: Props) {
   const editorLanguage = resolveAssignmentEditorLanguage(
     row.language,
     row.starterCode,
+    row.expectedOutput,
   );
 
   const { data: result } = session
