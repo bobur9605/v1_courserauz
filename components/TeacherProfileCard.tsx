@@ -118,14 +118,7 @@ export default function TeacherProfileCard(props: Props) {
             </div>
           )}
           <div className="w-full">
-            <label className="block text-sm font-semibold">{t("photoUrl")}</label>
-            <input
-              value={profileImageUrl}
-              onChange={(e) => setProfileImageUrl(e.target.value)}
-              placeholder="https://..."
-              className="mt-1 w-full rounded-md border border-[#e0e0e0] px-3 py-2 text-sm"
-            />
-            <label className="mt-2 block text-sm font-semibold">{t("uploadPhoto")}</label>
+            <label className="block text-sm font-semibold">{t("uploadPhoto")}</label>
             <input
               type="file"
               accept="image/*"

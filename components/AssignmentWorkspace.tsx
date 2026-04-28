@@ -97,7 +97,7 @@ export function AssignmentWorkspace({
       fn(sandbox.console);
       const text = logs.join("\n").trim();
       setOutput(text);
-      setLastPass(text.trim() === expectedOutput.trim());
+      setLastPass(normalizeOutput(text) === normalizeOutput(expectedOutput));
     } catch (e: unknown) {
       const err = e instanceof Error ? e.message : String(e);
       setOutput(logs.join("\n"));

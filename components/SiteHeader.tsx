@@ -64,6 +64,11 @@ export async function SiteHeader() {
                 <HeaderUserMenu
                   fullName={session.fullName}
                   profileImageUrl={session.profileImageUrl}
+                  dashboardHref={
+                    session.role === "TEACHER" || session.role === "SUPERADMIN"
+                      ? "/teacher"
+                      : "/dashboard"
+                  }
                 />
               </div>
             )}

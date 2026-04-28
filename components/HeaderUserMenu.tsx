@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Link } from "@/i18n/routing";
 import { LogoutButton } from "@/components/LogoutButton";
 
 type Props = {
   fullName: string;
   profileImageUrl?: string | null;
+  dashboardHref: string;
 };
 
-export function HeaderUserMenu({ fullName, profileImageUrl }: Props) {
+export function HeaderUserMenu({ fullName, profileImageUrl, dashboardHref }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -47,7 +49,13 @@ export function HeaderUserMenu({ fullName, profileImageUrl }: Props) {
 
       {open && (
         <div className="absolute right-0 z-50 mt-2 min-w-[200px] rounded-lg border border-[#e0e0e0] bg-white p-3 shadow-lg">
-          <p className="truncate text-sm font-semibold text-[#1c1d1f]">{fullName}</p>
+          <Link
+            href={dashboardHref}
+            onClick={() => setOpen(false)}
+            className="block truncate text-sm font-semibold text-[#1c1d1f] hover:text-[#0056d2] hover:underline"
+          >
+            {fullName}
+          </Link>
           <div className="mt-2 border-t border-[#eef0f2] pt-2">
             <LogoutButton variant="coursera" />
           </div>

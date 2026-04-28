@@ -28,10 +28,12 @@ export function inferAssignmentLanguageFromContent(
   starterCode: string,
   expectedOutput = "",
 ): AssignmentEditorLanguage | null {
+  if (matchesAnyPattern(starterCode, LEGACY_JS_TASK_PATTERNS)) {
+    return "javascript";
+  }
   const combined = `${starterCode}\n${expectedOutput}`;
   if (matchesAnyPattern(combined, HTML_TASK_PATTERNS)) return "html";
   if (matchesAnyPattern(combined, CSS_TASK_PATTERNS)) return "css";
-  if (matchesAnyPattern(starterCode, LEGACY_JS_TASK_PATTERNS)) return "javascript";
   return null;
 }
 
