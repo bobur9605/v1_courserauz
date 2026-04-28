@@ -30,7 +30,12 @@ export async function GET(_req: Request, ctx: Ctx) {
     .select("*")
     .eq("id", courseId)
     .maybeSingle();
-  if (courseError || !course || !canManageCourseContent(session, course.teacherId)) {
+  const canManage =
+    !!course &&
+    (canManageCourseContent(session, course.teacherId) ||
+      // Support legacy courses with null teacherId until data is fully backfilled.
+      (session.role === "TEACHER" && !course.teacherId));
+  if (courseError || !course || !canManage) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
@@ -56,7 +61,12 @@ export async function POST(req: Request, ctx: Ctx) {
     .select("*")
     .eq("id", courseId)
     .maybeSingle();
-  if (courseError || !course || !canManageCourseContent(session, course.teacherId)) {
+  const canManage =
+    !!course &&
+    (canManageCourseContent(session, course.teacherId) ||
+      // Support legacy courses with null teacherId until data is fully backfilled.
+      (session.role === "TEACHER" && !course.teacherId));
+  if (courseError || !course || !canManage) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
