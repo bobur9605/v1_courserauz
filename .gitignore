@@ -38,6 +38,9 @@ yarn-error.log*
 .env.production.local
 !.env.example
 
+# local role credentials (copy from role-credentials.example.json)
+role-credentials.json
+
 # vercel
 .vercel
 

@@ -1,6 +1,39 @@
 import bcrypt from "bcryptjs";
 import { createClient } from "@supabase/supabase-js";
+import fs from "node:fs";
+import path from "node:path";
 import { newId } from "../lib/ids";
+
+type RoleCredentials = {
+  superadmin: { email: string; password: string; fullName: string };
+  teacher: { email: string; password: string; fullName: string };
+  student: { email: string; password: string; fullName: string };
+};
+
+function loadRoleCredentials(): RoleCredentials {
+  const defaults: RoleCredentials = {
+    superadmin: { email: "admin@wdedu.uz", password: "demo1234", fullName: "Demo Admin" },
+    teacher: { email: "teacher@wdedu.uz", password: "demo1234", fullName: "Demo O‘qituvchi" },
+    student: { email: "student@wdedu.uz", password: "demo1234", fullName: "Demo Talaba" },
+  };
+
+  const rel = process.env.ROLE_CREDENTIALS_PATH?.trim() || "role-credentials.json";
+  const filePath = path.isAbsolute(rel) ? rel : path.join(process.cwd(), rel);
+  if (!fs.existsSync(filePath)) return defaults;
+
+  try {
+    const raw = fs.readFileSync(filePath, "utf8");
+    const parsed = JSON.parse(raw) as Partial<RoleCredentials>;
+    return {
+      superadmin: { ...defaults.superadmin, ...(parsed.superadmin ?? {}) },
+      teacher: { ...defaults.teacher, ...(parsed.teacher ?? {}) },
+      student: { ...defaults.student, ...(parsed.student ?? {}) },
+    };
+  } catch (e) {
+    console.warn(`Failed to read ${filePath}; falling back to defaults.`);
+    return defaults;
+  }
+}
 
 async function ensureUser(
   supabase: ReturnType<typeof createClient>,
@@ -40,27 +73,30 @@ async function main() {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const password = await bcrypt.hash("demo1234", 10);
+  const creds = loadRoleCredentials();
+  const superadminPasswordHash = await bcrypt.hash(creds.superadmin.password, 10);
+  const teacherPasswordHash = await bcrypt.hash(creds.teacher.password, 10);
+  const studentPasswordHash = await bcrypt.hash(creds.student.password, 10);
   await ensureUser(
     supabase,
-    "admin@wdedu.uz",
-    "Demo Admin",
+    creds.superadmin.email,
+    creds.superadmin.fullName,
     "SUPERADMIN",
-    password,
+    superadminPasswordHash,
   );
   const teacherId = await ensureUser(
     supabase,
-    "teacher@wdedu.uz",
-    "Demo O‘qituvchi",
+    creds.teacher.email,
+    creds.teacher.fullName,
     "TEACHER",
-    password,
+    teacherPasswordHash,
   );
   const studentId = await ensureUser(
     supabase,
-    "student@wdedu.uz",
-    "Demo Talaba",
+    creds.student.email,
+    creds.student.fullName,
     "STUDENT",
-    password,
+    studentPasswordHash,
   );
 
   const { error: delErr } = await supabase
