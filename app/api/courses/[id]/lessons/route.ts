@@ -93,7 +93,11 @@ export async function POST(req: Request, ctx: Ctx) {
   const nextOrder = (lastRows?.[0]?.order ?? -1) + 1;
 
   let assignmentId: string | null = null;
-  if (body.assignmentTitle && body.expectedOutput !== undefined && body.starterCode !== undefined) {
+  if (
+    body.assignmentTitle &&
+    body.expectedOutput !== undefined &&
+    body.starterCode !== undefined
+  ) {
     assignmentId = newId();
     const { error: assignmentError } = await supabase.from("Assignment").insert({
       id: assignmentId,

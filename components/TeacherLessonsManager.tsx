@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Link } from "@/i18n/routing";
+import type { AssignmentEditorLanguage } from "@/lib/assignmentMode";
 
 type LessonRow = {
   id: string;
@@ -35,6 +36,7 @@ export function TeacherLessonsManager({
     assignmentInstructions: "",
     starterCode: "",
     expectedOutput: "",
+    language: "javascript" as AssignmentEditorLanguage,
   });
 
   async function persistOrder(next: LessonRow[]) {
@@ -84,6 +86,7 @@ export function TeacherLessonsManager({
           : undefined,
         starterCode: withAssignment ? form.starterCode : undefined,
         expectedOutput: withAssignment ? form.expectedOutput : undefined,
+        language: withAssignment ? form.language : undefined,
       }),
     });
     setBusy(false);
@@ -103,6 +106,7 @@ export function TeacherLessonsManager({
       assignmentInstructions: "",
       starterCode: "",
       expectedOutput: "",
+      language: "javascript",
     });
   }
 
@@ -149,6 +153,23 @@ export function TeacherLessonsManager({
             }
             placeholder="Starter code"
           />
+          <label className="grid gap-1 text-sm text-[#1c1d1f]">
+            <span className="font-semibold">Editor language</span>
+            <select
+              className="rounded-md border border-[#d1d5db] px-3 py-2 text-sm"
+              value={form.language}
+              onChange={(e) =>
+                setForm((p) => ({
+                  ...p,
+                  language: e.target.value as AssignmentEditorLanguage,
+                }))
+              }
+            >
+              <option value="javascript">JavaScript</option>
+              <option value="html">HTML</option>
+              <option value="css">CSS</option>
+            </select>
+          </label>
           <textarea
             className="min-h-[80px] rounded-md border border-[#d1d5db] px-3 py-2 font-mono text-sm"
             value={form.expectedOutput}
