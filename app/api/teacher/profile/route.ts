@@ -77,6 +77,7 @@ export async function PATCH(req: Request) {
     role: session.role as Role,
     email: session.email,
     fullName: body.fullName,
+    profileImageUrl: body.profileImageUrl,
     mustChangePassword: false,
   });
 

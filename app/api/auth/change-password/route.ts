@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   const supabase = createAdminClient();
   const { data: user, error } = await supabase
     .from("User")
-    .select("id, email, fullName, role, passwordHash, mustChangePassword")
+    .select("id, email, fullName, role, passwordHash, mustChangePassword, profileImageUrl")
     .eq("id", session.sub)
     .maybeSingle();
   if (error || !user) {
@@ -54,6 +54,7 @@ export async function POST(req: Request) {
     role: user.role as Role,
     email: user.email,
     fullName: user.fullName,
+    profileImageUrl: user.profileImageUrl,
     mustChangePassword: false,
   });
 

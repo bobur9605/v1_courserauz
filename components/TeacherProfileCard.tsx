@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 
 type Props = {
   fullName: string;
@@ -14,6 +15,7 @@ type Props = {
 export default function TeacherProfileCard(props: Props) {
   const t = useTranslations("teacher");
   const tf = useTranslations("form");
+  const router = useRouter();
 
   const initialNameParts = props.fullName.trim().split(/\s+/).filter(Boolean);
   const [firstName, setFirstName] = useState(initialNameParts[0] ?? "");
@@ -87,6 +89,7 @@ export default function TeacherProfileCard(props: Props) {
 
     setNewPassword("");
     setSaved(true);
+    router.refresh();
   }
 
   const displayName = `${firstName.trim()} ${lastName.trim()}`.trim() || props.fullName;

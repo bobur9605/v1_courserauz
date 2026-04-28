@@ -61,7 +61,10 @@ export async function SiteHeader() {
               </>
             ) : (
               <div className="flex items-center gap-3">
-                <HeaderUserMenu fullName={session.fullName} />
+                <HeaderUserMenu
+                  fullName={session.fullName}
+                  profileImageUrl={session.profileImageUrl}
+                />
               </div>
             )}
           </div>

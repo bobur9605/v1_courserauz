@@ -16,7 +16,7 @@ export async function POST(req: Request) {
 
     const { data: user, error } = await supabase
       .from("User")
-      .select("id, email, fullName, role, passwordHash, mustChangePassword")
+      .select("id, email, fullName, role, passwordHash, mustChangePassword, profileImageUrl")
       .eq("email", body.email)
       .maybeSingle();
     if (error) {
@@ -44,6 +44,7 @@ export async function POST(req: Request) {
       role: normalizedRole,
       email: user.email,
       fullName: user.fullName,
+      profileImageUrl: user.profileImageUrl,
       mustChangePassword: !!user.mustChangePassword,
     });
     return NextResponse.json({ ok: true, role: normalizedRole });

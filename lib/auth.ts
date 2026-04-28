@@ -15,6 +15,7 @@ export type SessionPayload = {
   role: Role;
   email: string;
   fullName: string;
+  profileImageUrl?: string | null;
   mustChangePassword?: boolean;
 };
 
@@ -23,6 +24,7 @@ export async function signSession(payload: SessionPayload) {
     role: payload.role,
     email: payload.email,
     fullName: payload.fullName,
+    profileImageUrl: payload.profileImageUrl ?? null,
     mustChangePassword: payload.mustChangePassword ?? false,
   })
     .setProtectedHeader({ alg: "HS256" })
@@ -74,11 +76,20 @@ export async function getSession(): Promise<SessionPayload | null> {
     ) {
       return null;
     }
+    if (
+      payload.profileImageUrl !== undefined &&
+      payload.profileImageUrl !== null &&
+      typeof payload.profileImageUrl !== "string"
+    ) {
+      return null;
+    }
     return {
       sub,
       role: payload.role,
       email: payload.email,
       fullName: payload.fullName,
+      profileImageUrl:
+        typeof payload.profileImageUrl === "string" ? payload.profileImageUrl : null,
       mustChangePassword: payload.mustChangePassword,
     };
   } catch {

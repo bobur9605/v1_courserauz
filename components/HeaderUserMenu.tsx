@@ -5,9 +5,10 @@ import { LogoutButton } from "@/components/LogoutButton";
 
 type Props = {
   fullName: string;
+  profileImageUrl?: string | null;
 };
 
-export function HeaderUserMenu({ fullName }: Props) {
+export function HeaderUserMenu({ fullName, profileImageUrl }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -28,12 +29,16 @@ export function HeaderUserMenu({ fullName }: Props) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-[#d9d9d9] bg-white text-sm font-bold text-[#0056d2] shadow-sm transition hover:bg-[#f5f9ff] focus:outline-none focus:ring-2 focus:ring-[#0056d2]/20"
+        className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-[#d9d9d9] bg-white text-sm font-bold text-[#0056d2] shadow-sm transition hover:bg-[#f5f9ff] focus:outline-none focus:ring-2 focus:ring-[#0056d2]/20"
         aria-label="Open user menu"
         aria-expanded={open}
         aria-haspopup="menu"
       >
-        {initial}
+        {profileImageUrl ? (
+          <img src={profileImageUrl} alt={fullName} className="h-full w-full object-cover" />
+        ) : (
+          initial
+        )}
       </button>
 
       {open && (
