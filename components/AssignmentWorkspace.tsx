@@ -5,7 +5,10 @@ import { useRouter } from "@/i18n/routing";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 import { normalizeOutput } from "@/lib/normalizeOutput";
-import type { AssignmentEditorLanguage } from "@/lib/assignmentMode";
+import {
+  assignmentEditorFileName,
+  type AssignmentEditorLanguage,
+} from "@/lib/assignmentMode";
 
 function MonacoEditorLoading() {
   const t = useTranslations("assignment");
@@ -46,6 +49,11 @@ export function AssignmentWorkspace({
   const t = useTranslations("assignment");
   const locale = useLocale();
   const router = useRouter();
+  const fileName = assignmentEditorFileName(editorLanguage);
+  const helperText =
+    editorLanguage === "javascript"
+      ? t("consoleHint")
+      : t("markupHint");
   const [code, setCode] = useState(initialCode ?? starterCode);
   const [output, setOutput] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
@@ -148,10 +156,10 @@ export function AssignmentWorkspace({
         <div className="flex items-center justify-between border-b border-[#eceff3] bg-[#f9fafb] px-4 py-2.5">
           <div>
             <h2 className="text-base font-bold text-[#1c1d1f]">{t("editor")}</h2>
-            <p className="text-xs text-[#6a6f73]">{t("consoleHint")}</p>
+            <p className="text-xs text-[#6a6f73]">{helperText}</p>
           </div>
           <span className="rounded-md border border-[#d8dee6] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#4b5563]">
-            main.js
+            {fileName}
           </span>
         </div>
 
@@ -164,7 +172,7 @@ export function AssignmentWorkspace({
             value={code}
             onChange={(v) => setCode(v ?? "")}
             options={options}
-            path="main.js"
+            path={fileName}
           />
         </div>
 

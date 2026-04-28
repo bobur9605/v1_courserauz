@@ -156,6 +156,7 @@
     "submitted": "Saqlandi. Ball: {score}",
     "needLogin": "Topshirish uchun tizimga kiring.",
     "consoleHint": "console.log(...) dan foydalaning (JavaScript).",
+    "markupHint": "HTML/CSS topshiriqlarida kutilayotgan chiqishni aynan mos yozing.",
     "teacherFeedback": "O‘qituvchi fikri",
     "needEnroll": "Topshirish uchun avval kursga qo‘shiling.",
     "notFound": "Topshiriq topilmadi.",

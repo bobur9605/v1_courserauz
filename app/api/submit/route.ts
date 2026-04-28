@@ -6,6 +6,7 @@ import { normalizeOutput, runStudentCode } from "@/lib/runner";
 import { newId } from "@/lib/ids";
 import { bypassesLessonSequence } from "@/lib/lessonGating";
 import { studentMayAccessLessonOrder } from "@/lib/lessonGatingServer";
+import { usesJavaScriptRunner } from "@/lib/assignmentMode";
 
 const schema = z.object({
   assignmentId: z.string().min(1),
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
     const supabase = createAdminClient();
     const { data: assignment, error: aErr } = await supabase
       .from("Assignment")
-      .select("id, expectedOutput, courseId, order, language, lessonId")
+      .select("id, expectedOutput, courseId, order, language, lessonId, starterCode")
       .eq("id", body.assignmentId)
       .maybeSingle();
     if (aErr || !assignment) {
@@ -65,7 +66,10 @@ export async function POST(req: Request) {
     ) {
       return NextResponse.json({ error: "sequence_locked" }, { status: 403 });
     }
-    const language = assignment.language ?? "javascript";
+    const runAsJavaScript = usesJavaScriptRunner(
+      assignment.language,
+      assignment.starterCode,
+    );
 
     if (session.role === "STUDENT") {
       const { data: enrollment } = await supabase
@@ -80,7 +84,7 @@ export async function POST(req: Request) {
     }
 
     const execution =
-      language === "javascript"
+      runAsJavaScript
         ? runStudentCode(body.code)
         : { ok: true, stdout: normalizeOutput(body.code), error: undefined };
     const { stdout, ok, error } = execution;

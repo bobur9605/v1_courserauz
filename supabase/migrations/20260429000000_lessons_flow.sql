@@ -49,11 +49,6 @@ DO $$ BEGIN
    FOREIGN KEY ("lessonId") REFERENCES "Lesson"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-CREATE UNIQUE INDEX IF NOT EXISTS "Lesson_courseId_order_key" ON "Lesson"("courseId", "order");
-CREATE UNIQUE INDEX IF NOT EXISTS "Lesson_assignmentId_key" ON "Lesson"("assignmentId") WHERE "assignmentId" IS NOT NULL;
-CREATE INDEX IF NOT EXISTS "Lesson_courseId_isPublished_idx" ON "Lesson"("courseId", "isPublished");
-CREATE UNIQUE INDEX IF NOT EXISTS "LessonCompletion_lessonId_studentId_key" ON "LessonCompletion"("lessonId", "studentId");
-
 -- Backfill lessons from existing assignments.
 INSERT INTO "Lesson" (
   "id",
@@ -66,22 +61,54 @@ INSERT INTO "Lesson" (
   "createdAt",
   "updatedAt"
 )
+WITH assignments_to_backfill AS (
+  SELECT
+    a."id",
+    a."courseId",
+    a."title",
+    a."instructions",
+    ROW_NUMBER() OVER (
+      PARTITION BY a."courseId"
+      ORDER BY a."order" ASC, a."id" ASC
+    ) - 1 AS lesson_order
+  FROM "Assignment" a
+  LEFT JOIN "Lesson" l ON l."assignmentId" = a."id"
+  WHERE l."id" IS NULL
+)
 SELECT
   'les_' || substr(md5(a."id"), 1, 21),
   a."courseId",
   a."id",
   a."title",
   a."instructions",
-  a."order",
+  a.lesson_order,
   true,
   CURRENT_TIMESTAMP,
   CURRENT_TIMESTAMP
-FROM "Assignment" a
-LEFT JOIN "Lesson" l ON l."assignmentId" = a."id"
-WHERE l."id" IS NULL;
+FROM assignments_to_backfill a;
 
 UPDATE "Assignment" a
 SET "lessonId" = l."id"
 FROM "Lesson" l
 WHERE l."assignmentId" = a."id"
   AND (a."lessonId" IS NULL OR a."lessonId" <> l."id");
+
+WITH ordered_lessons AS (
+  SELECT
+    l."id",
+    ROW_NUMBER() OVER (
+      PARTITION BY l."courseId"
+      ORDER BY l."order" ASC, l."createdAt" ASC, l."id" ASC
+    ) - 1 AS normalized_order
+  FROM "Lesson" l
+)
+UPDATE "Lesson" l
+SET "order" = ol.normalized_order
+FROM ordered_lessons ol
+WHERE l."id" = ol."id"
+  AND l."order" <> ol.normalized_order;
+
+CREATE UNIQUE INDEX IF NOT EXISTS "Lesson_courseId_order_key" ON "Lesson"("courseId", "order");
+CREATE UNIQUE INDEX IF NOT EXISTS "Lesson_assignmentId_key" ON "Lesson"("assignmentId") WHERE "assignmentId" IS NOT NULL;
+CREATE INDEX IF NOT EXISTS "Lesson_courseId_isPublished_idx" ON "Lesson"("courseId", "isPublished");
+CREATE UNIQUE INDEX IF NOT EXISTS "LessonCompletion_lessonId_studentId_key" ON "LessonCompletion"("lessonId", "studentId");

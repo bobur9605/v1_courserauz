@@ -6,6 +6,7 @@ import { getSession } from "@/lib/auth";
 import { AssignmentWorkspace } from "@/components/AssignmentWorkspace";
 import { studentMayAccessLessonOrder } from "@/lib/lessonGatingServer";
 import { LessonCompleteButton } from "@/components/LessonCompleteButton";
+import { resolveAssignmentEditorLanguage } from "@/lib/assignmentMode";
 
 export const dynamic = "force-dynamic";
 
@@ -112,7 +113,10 @@ export default async function LessonPage(props: Props) {
               existingScore={result?.score}
               existingPassed={result?.passed}
               existingFeedback={result?.feedback}
-              editorLanguage={assignment.language as "javascript" | "html" | "css"}
+              editorLanguage={resolveAssignmentEditorLanguage(
+                assignment.language,
+                assignment.starterCode,
+              )}
             />
           ) : (
             <p className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">

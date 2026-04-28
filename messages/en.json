@@ -156,6 +156,7 @@
     "submitted": "Saved. Score: {score}",
     "needLogin": "Log in to submit.",
     "consoleHint": "Use console.log(...) for JavaScript tasks.",
+    "markupHint": "Match the expected output exactly for HTML/CSS tasks.",
     "teacherFeedback": "Instructor feedback",
     "needEnroll": "Join this course before submitting.",
     "notFound": "Assignment not found.",

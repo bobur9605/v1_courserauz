@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { AssignmentWorkspace } from "@/components/AssignmentWorkspace";
 import { studentMayAccessLessonOrder } from "@/lib/lessonGatingServer";
+import { resolveAssignmentEditorLanguage } from "@/lib/assignmentMode";
 
 export const dynamic = "force-dynamic";
 
@@ -54,7 +55,10 @@ export default async function AssignmentPage(props: Props) {
     .eq("id", row.courseId)
     .maybeSingle();
   const courseTitle = courseRow?.title ?? "";
-  const editorLanguage = row.language ?? "javascript";
+  const editorLanguage = resolveAssignmentEditorLanguage(
+    row.language,
+    row.starterCode,
+  );
 
   const { data: result } = session
     ? await supabase
