@@ -6,8 +6,7 @@ SET "language" = 'javascript'
 WHERE COALESCE("language", 'javascript') <> 'javascript'
   AND (
     "starterCode" ~ '(^|\\n)\\s*(const|let|var)\\s+[A-Za-z_$][A-Za-z0-9_$]*'
-    OR "starterCode" ~ '(^|\\n)\\s*function\\s+[A-Za-z_$][A-Za-z0-9_$]*\\s*\\('
+    OR "starterCode" ~ '(^|\\n)\\s*function\\s+[A-Za-z_$][A-Za-z0-9_$]*\\s*[(]'
     OR "starterCode" LIKE '%console.log(%'
     OR "starterCode" LIKE '%=>%'
-    OR "starterCode" ~ '(^|\\n)\\s*//'
   );

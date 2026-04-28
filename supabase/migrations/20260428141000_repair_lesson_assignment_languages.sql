@@ -1,8 +1,6 @@
--- Backfill lesson-linked assignments that were created before teachers could
--- choose the editor language in the lesson flow.
---
--- Prefer explicit code-shape signals first, then fall back to the course title
--- for older seed data that still has generic HTML/CSS starter snippets.
+-- Re-run lesson assignment language backfill after removing the weak
+-- single-line comment heuristic, which incorrectly forced some HTML tasks
+-- into JavaScript mode and caused the editor to show main.js.
 
 UPDATE "Assignment" a
 SET "language" = CASE
@@ -13,8 +11,6 @@ SET "language" = CASE
     OR a."expectedOutput" ~ '(^|\\n)\\s*[@.#]?[A-Za-z][A-Za-z0-9_:-]*(\\s+[@.#]?[A-Za-z][A-Za-z0-9_:-]*)*\\s*\\{'
     OR a."starterCode" ~* '(^|\\n)\\s*(color|background|font|margin|padding|display|border)\\s*:'
     THEN 'css'
-  WHEN c."title" ILIKE '%html%' THEN 'html'
-  WHEN c."title" ILIKE '%css%' THEN 'css'
   ELSE a."language"
 END
 FROM "Course" c

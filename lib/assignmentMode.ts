@@ -5,7 +5,6 @@ const LEGACY_JS_TASK_PATTERNS = [
   /(?:^|\n)\s*(?:const|let|var)\s+[A-Za-z_$][\w$]*/,
   /(?:^|\n)\s*function\s+[A-Za-z_$][\w$]*\s*\(/,
   /=>/,
-  /(?:^|\n)\s*\/\/.+/,
 ] as const;
 
 export function inferAssignmentLanguageFromCourseTitle(
