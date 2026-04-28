@@ -13,7 +13,7 @@ import {
 function MonacoEditorLoading() {
   const t = useTranslations("assignment");
   return (
-    <div className="flex h-[500px] min-h-[320px] items-center justify-center bg-[#f9fafb] text-sm text-[#6a6f73]">
+    <div className="flex h-[55vh] min-h-[320px] max-h-[500px] items-center justify-center bg-[#f9fafb] text-sm text-[#6a6f73]">
       {t("editorLoading")}
     </div>
   );
@@ -66,7 +66,7 @@ export function AssignmentWorkspace({
     () => ({
       minimap: { enabled: false },
       fontSize: 14,
-      wordWrap: "off" as const,
+      wordWrap: "on" as const,
       scrollBeyondLastLine: false,
       automaticLayout: true,
       lineNumbersMinChars: 3,
@@ -151,21 +151,21 @@ export function AssignmentWorkspace({
   }, [assignmentId, code, locale, router, t]);
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
       <section className="overflow-hidden rounded-xl border border-[#dfe3e8] bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-[#eceff3] bg-[#f9fafb] px-4 py-2.5">
-          <div>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eceff3] bg-[#f9fafb] px-4 py-2.5">
+          <div className="min-w-0">
             <h2 className="text-base font-bold text-[#1c1d1f]">{t("editor")}</h2>
             <p className="text-xs text-[#6a6f73]">{helperText}</p>
           </div>
-          <span className="rounded-md border border-[#d8dee6] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#4b5563]">
+          <span className="max-w-full rounded-md border border-[#d8dee6] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#4b5563]">
             {fileName}
           </span>
         </div>
 
-        <div className="h-[500px] min-h-[320px] w-full">
+        <div className="h-[55vh] min-h-[320px] max-h-[500px] w-full">
           <Monaco
-            height={500}
+            height="55vh"
             width="100%"
             language={editorLanguage}
             theme="vs-light"
@@ -194,7 +194,7 @@ export function AssignmentWorkspace({
           </button>
           {msg && (
             <p
-              className="ml-auto max-w-[55%] whitespace-pre-wrap text-right text-sm font-medium text-[#0056d2]"
+              className="w-full whitespace-pre-wrap text-left text-sm font-medium text-[#0056d2] sm:ml-auto sm:max-w-[55%] sm:text-right"
               role="status"
             >
               {msg}

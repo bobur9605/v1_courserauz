@@ -43,10 +43,10 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   return (
     <html lang={locale} className={inter.variable}>
-      <body className="min-h-screen bg-[#f5f7fa] font-sans text-[#1c1d1f] antialiased">
+      <body className="min-h-screen overflow-x-clip bg-[#f5f7fa] font-sans text-[#1c1d1f] antialiased">
         <NextIntlClientProvider messages={messages}>
           <SiteHeader />
-          <main className="mx-auto min-h-[calc(100vh-8rem)] max-w-[1344px] px-4 py-8 sm:px-6 lg:px-8">
+          <main className="mx-auto min-h-[calc(100vh-8rem)] w-full max-w-[1344px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
             {children}
           </main>
           <Footer />

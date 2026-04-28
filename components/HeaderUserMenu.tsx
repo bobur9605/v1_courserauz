@@ -32,7 +32,7 @@ export function HeaderUserMenu({ fullName, profileImageUrl, dashboardHref }: Pro
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-10 items-center gap-2 rounded-full border border-[#d9d9d9] bg-white px-2 pr-3 text-sm font-semibold text-[#1c1d1f] shadow-sm transition hover:bg-[#f5f9ff] focus:outline-none focus:ring-2 focus:ring-[#0056d2]/20"
+        className="flex min-w-0 items-center gap-2 rounded-full border border-[#d9d9d9] bg-white px-2 pr-3 text-sm font-semibold text-[#1c1d1f] shadow-sm transition hover:bg-[#f5f9ff] focus:outline-none focus:ring-2 focus:ring-[#0056d2]/20"
         aria-label="Open user menu"
         aria-expanded={open}
         aria-haspopup="menu"
@@ -44,11 +44,11 @@ export function HeaderUserMenu({ fullName, profileImageUrl, dashboardHref }: Pro
             initial
           )}
         </span>
-        <span className="hidden max-w-[110px] truncate sm:inline">{shortName}</span>
+        <span className="hidden max-w-[140px] truncate xl:inline">{shortName}</span>
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-2 min-w-[200px] rounded-lg border border-[#e0e0e0] bg-white p-3 shadow-lg">
+        <div className="absolute right-0 z-50 mt-2 w-[min(16rem,calc(100vw-2rem))] rounded-lg border border-[#e0e0e0] bg-white p-3 shadow-lg">
           <Link
             href={dashboardHref}
             onClick={() => setOpen(false)}

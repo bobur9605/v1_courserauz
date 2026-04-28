@@ -32,7 +32,7 @@ export function ExploreNav({ loggedIn, role }: Props) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1 rounded-sm px-1 py-2 text-sm font-bold text-[#1c1d1f] hover:text-[#0056d2]"
+        className="flex items-center gap-1 rounded-sm px-1 py-2 text-sm font-bold text-[#1c1d1f] transition hover:text-[#0056d2]"
         aria-expanded={open}
         aria-haspopup="true"
       >
@@ -49,7 +49,7 @@ export function ExploreNav({ loggedIn, role }: Props) {
         </svg>
       </button>
       {open && (
-        <div className="absolute top-full left-0 z-50 mt-1 min-w-[220px] rounded-lg border border-[#e0e0e0] bg-white py-2 shadow-lg">
+        <div className="absolute left-0 top-full z-50 mt-1 w-[min(18rem,calc(100vw-2rem))] rounded-lg border border-[#e0e0e0] bg-white py-2 shadow-lg">
           <Link
             href="/courses"
             className="block px-4 py-2.5 text-sm font-semibold text-[#1c1d1f] hover:bg-[#f3f4f6]"

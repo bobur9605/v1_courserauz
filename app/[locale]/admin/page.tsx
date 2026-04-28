@@ -103,16 +103,16 @@ export default async function AdminPage() {
       </div>
 
       <section className="rounded-xl border border-[#e0e0e0] bg-white shadow-sm">
-        <h2 className="border-b border-[#e0e0e0] px-6 py-4 text-lg font-bold">
+        <h2 className="border-b border-[#e0e0e0] px-4 py-4 text-lg font-bold sm:px-6">
           {t("allCourses")}
         </h2>
         <ul className="divide-y divide-[#e0e0e0]">
           {courses.map((c) => (
             <li
               key={c.id}
-              className="flex flex-wrap items-center justify-between gap-3 px-6 py-4"
+              className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6"
             >
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="font-semibold text-[#1c1d1f]">{c.title}</p>
                 <p className="text-xs text-[#6a6f73]">
                   {countByCourse.get(c.id) ?? 0} {t("assignments").toLowerCase()}
@@ -130,10 +130,45 @@ export default async function AdminPage() {
       </section>
 
       <section className="rounded-xl border border-[#e0e0e0] bg-white shadow-sm">
-        <h2 className="border-b border-[#e0e0e0] px-6 py-4 text-lg font-bold">
+        <h2 className="border-b border-[#e0e0e0] px-4 py-4 text-lg font-bold sm:px-6">
           {t("students")}
         </h2>
-        <div className="overflow-x-auto">
+        <div className="divide-y divide-[#e0e0e0] md:hidden">
+          {resultRows.map((r) => (
+            <article key={r.id} className="space-y-3 px-4 py-4">
+              <div>
+                <p className="font-medium text-[#1c1d1f]">
+                  {userById[r.studentId]?.fullName ?? ""}
+                </p>
+                <p className="text-xs text-[#6a6f73]">{userById[r.studentId]?.email ?? ""}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#6a6f73]">
+                  {t("assignments")}
+                </p>
+                <p className="text-sm text-[#6a6f73]">
+                  {asgnById[r.assignmentId]?.course.title ?? ""} -{" "}
+                  {asgnById[r.assignmentId]?.title ?? ""}
+                </p>
+              </div>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[#6a6f73]">
+                    {tf("grade")}
+                  </p>
+                  <p className="text-sm font-semibold text-[#1c1d1f]">{r.score ?? "—"}</p>
+                </div>
+                <div className="max-w-[60%] text-right">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[#6a6f73]">
+                    {tf("feedback")}
+                  </p>
+                  <p className="text-sm text-[#6a6f73]">{r.feedback || "—"}</p>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
           <table className="min-w-full text-left text-sm">
             <thead className="bg-[#f5f7fa] text-xs font-bold uppercase text-[#6a6f73]">
               <tr>
@@ -168,10 +203,33 @@ export default async function AdminPage() {
       </section>
 
       <section className="rounded-xl border border-[#e0e0e0] bg-white shadow-sm">
-        <h2 className="border-b border-[#e0e0e0] px-6 py-4 text-lg font-bold">
+        <h2 className="border-b border-[#e0e0e0] px-4 py-4 text-lg font-bold sm:px-6">
           {t("teachers")}
         </h2>
-        <div className="overflow-x-auto">
+        <div className="divide-y divide-[#e0e0e0] md:hidden">
+          {teachers.map((teacher) => (
+            <article key={teacher.id} className="space-y-2 px-4 py-4">
+              <div>
+                <p className="font-medium text-[#1c1d1f]">{teacher.fullName}</p>
+                <p className="text-xs text-[#6a6f73]">{teacher.email}</p>
+              </div>
+              <div className="flex flex-wrap gap-4 text-sm text-[#6a6f73]">
+                <span>
+                  <span className="font-semibold text-[#1c1d1f]">{tf("age")}:</span>{" "}
+                  {teacher.age ?? "—"}
+                </span>
+                <span>
+                  <span className="font-semibold text-[#1c1d1f]">{tf("gender")}:</span>{" "}
+                  {teacher.gender ? t(`gender.${teacher.gender}`) : "—"}
+                </span>
+              </div>
+            </article>
+          ))}
+          {teachers.length === 0 && (
+            <p className="px-4 py-4 text-[#6a6f73]">{t("noTeachers")}</p>
+          )}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
           <table className="min-w-full text-left text-sm">
             <thead className="bg-[#f5f7fa] text-xs font-bold uppercase text-[#6a6f73]">
               <tr>

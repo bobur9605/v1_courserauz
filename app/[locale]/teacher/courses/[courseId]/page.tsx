@@ -112,10 +112,10 @@ export default async function TeacherCoursePage(props: Props) {
         </div>
 
         <section className="rounded-xl border border-[#e0e0e0] bg-white shadow-sm">
-          <h2 className="border-b border-[#e0e0e0] px-6 py-4 text-lg font-bold">
+          <h2 className="border-b border-[#e0e0e0] px-4 py-4 text-lg font-bold sm:px-6">
             Lessons
           </h2>
-          <div className="px-6 py-4">
+          <div className="px-4 py-4 sm:px-6">
             {lessonsSchemaMissing ? (
               <p className="mb-4 text-sm text-red-600">
                 Database setup for lessons is incomplete. Run the latest Supabase
@@ -134,10 +134,58 @@ export default async function TeacherCoursePage(props: Props) {
         <TeacherResourcesSection courseId={courseId} />
 
         <section className="rounded-xl border border-[#e0e0e0] bg-white shadow-sm">
-          <h2 className="border-b border-[#e0e0e0] px-6 py-4 text-lg font-bold">
+          <h2 className="border-b border-[#e0e0e0] px-4 py-4 text-lg font-bold sm:px-6">
             {t("studentsProgress")}
           </h2>
-          <div className="overflow-x-auto">
+          <div className="divide-y divide-[#e0e0e0] md:hidden">
+            {userIds.map((uid) => {
+              const u = userById[uid];
+              const row = resultsByStudent.get(uid);
+              let passedCount = 0;
+              for (const lesson of lessons) {
+                const done = lesson.assignmentId
+                  ? row?.passed.has(lesson.assignmentId)
+                  : row?.completed.has(lesson.id);
+                if (done) passedCount += 1;
+              }
+              const total = lessons.length;
+              const pct = total ? Math.round((passedCount / total) * 100) : 0;
+              return (
+                <article key={uid} className="space-y-3 px-4 py-4">
+                  <div>
+                    <p className="font-medium text-[#1c1d1f]">{u?.fullName ?? uid}</p>
+                    <p className="text-xs text-[#6a6f73]">{u?.email ?? ""}</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="rounded-full bg-[#eef5ff] px-3 py-1 text-xs font-semibold text-[#0056d2]">
+                      {passedCount}/{total} ({pct}%)
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {lessons.map((lesson, idx) => {
+                        const done = lesson.assignmentId
+                          ? row?.passed.has(lesson.assignmentId)
+                          : row?.completed.has(lesson.id);
+                        return (
+                          <span
+                            key={lesson.id}
+                            className={`rounded px-2 py-1 text-xs font-semibold ${
+                              done
+                                ? "bg-emerald-100 text-emerald-800"
+                                : "bg-[#eef2f7] text-[#6a6f73]"
+                            }`}
+                            title={lesson.title}
+                          >
+                            {idx + 1}:{done ? "P" : "N"}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
             <table className="min-w-full text-left text-sm">
               <thead className="bg-[#f5f7fa] text-xs font-bold uppercase text-[#6a6f73]">
                 <tr>
@@ -201,7 +249,7 @@ export default async function TeacherCoursePage(props: Props) {
             </table>
           </div>
           {userIds.length === 0 && (
-            <p className="px-6 py-8 text-center text-sm text-[#6a6f73]">
+            <p className="px-4 py-8 text-center text-sm text-[#6a6f73] sm:px-6">
               {t("noStudents")}
             </p>
           )}

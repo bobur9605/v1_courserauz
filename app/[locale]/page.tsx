@@ -61,9 +61,9 @@ export default async function HomePage() {
   const partnerLabels = ["HTML5", "CSS3", "JavaScript", "ES6+", "Git", "REST"];
 
   return (
-    <div className="space-y-14 lg:space-y-20">
+    <div className="space-y-12 lg:space-y-20">
       <section className="grid gap-4 lg:grid-cols-2">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#e8faf3] to-[#f0fdf4] p-8 shadow-sm ring-1 ring-[#e8eaed] lg:p-10">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#e8faf3] to-[#f0fdf4] p-6 shadow-sm ring-1 ring-[#e8eaed] sm:p-8 lg:p-10">
           <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-[#0056d2]/10 blur-2xl" />
           <div className="relative">
             <div className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1 text-xs font-bold text-[#0056d2] shadow-sm ring-1 ring-[#d9e9ff]">
@@ -98,7 +98,7 @@ export default async function HomePage() {
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0056d2] to-[#1a56b9] p-8 text-white shadow-sm lg:p-10">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0056d2] to-[#1a56b9] p-6 text-white shadow-sm sm:p-8 lg:p-10">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M30%200L60%2030L30%2060L0%2030Z%22%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.04%22%2F%3E%3C%2Fsvg%3E')] opacity-60" />
           <div className="relative">
             <p className="text-xs font-bold uppercase tracking-wider text-white/80">
@@ -138,7 +138,7 @@ export default async function HomePage() {
         ].map((card, i) => (
           <div
             key={i}
-            className="flex min-h-[120px] items-start justify-between gap-4 rounded-xl bg-white p-6 shadow-sm ring-1 ring-[#e8eaed]"
+            className="flex min-h-[120px] flex-col gap-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-[#e8eaed] sm:flex-row sm:items-start sm:justify-between sm:p-6"
           >
             <div>
               <h3 className="text-lg font-bold text-[#1c1d1f]">{card.title}</h3>
@@ -244,7 +244,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-2xl bg-gradient-to-r from-[#0056d2] to-[#4c1d95] p-8 text-white shadow-lg md:flex md:items-center md:justify-between md:p-12">
+      <section className="overflow-hidden rounded-2xl bg-gradient-to-r from-[#0056d2] to-[#4c1d95] p-6 text-white shadow-lg md:flex md:items-center md:justify-between md:p-12">
         <div className="max-w-xl">
           <h2 className="text-2xl font-bold md:text-3xl">
             {t("promoBannerTitle")}
@@ -257,13 +257,13 @@ export default async function HomePage() {
             <span aria-hidden>→</span>
           </Link>
         </div>
-        <div className="relative mt-8 md:mt-0 md:w-[380px]">
-          <div className="flex gap-3 overflow-x-auto pb-2 md:justify-end">
+        <div className="relative mt-8 md:mt-0 md:w-full md:max-w-[380px]">
+          <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2 md:mx-0 md:justify-end md:px-0">
             {coursesWithAssignments.slice(0, 4).map((c) => (
               <Link
                 key={c.id}
                 href={`/courses/${c.id}`}
-                className="w-[140px] shrink-0 rounded-xl bg-white p-3 text-[#1c1d1f] shadow-lg"
+                className="w-[min(11rem,70vw)] shrink-0 rounded-xl bg-white p-3 text-[#1c1d1f] shadow-lg sm:w-[140px]"
               >
                 <div className="mb-2 h-16 rounded-lg bg-gradient-to-br from-indigo-200 to-blue-300" />
                 <p className="text-[10px] font-semibold text-[#6a6f73]">WD-EDU</p>
@@ -279,7 +279,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="grid gap-8 rounded-2xl bg-[#0f172a] p-8 text-white md:grid-cols-2 md:items-center md:p-12">
+      <section className="grid gap-8 rounded-2xl bg-[#0f172a] p-6 text-white md:grid-cols-2 md:items-center md:p-12">
         <div>
           <h2 className="text-2xl font-bold leading-tight md:text-3xl">
             {t("outcomeTitle")}
@@ -354,7 +354,7 @@ export default async function HomePage() {
 
       <HomeFAQ title={t("faqTitle")} items={faqItems} />
 
-      <section className="rounded-2xl border border-dashed border-[#cbd5e1] bg-white p-8 shadow-sm">
+      <section className="rounded-2xl border border-dashed border-[#cbd5e1] bg-white p-6 shadow-sm sm:p-8">
         <h2 className="text-lg font-bold text-[#1c1d1f]">{t("demoTitle")}</h2>
         <ul className="mt-4 space-y-2 text-sm text-[#6a6f73]">
           <li>{t("demoTeacher")}</li>

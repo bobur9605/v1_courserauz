@@ -84,7 +84,7 @@ export default async function DashboardPage() {
       <StudentProgressCharts summaries={Object.values(progressByCourse)} />
 
       <div className="overflow-hidden rounded-xl border border-[#e0e0e0] bg-white shadow-sm">
-        <h2 className="border-b border-[#e0e0e0] px-6 py-4 text-lg font-bold text-[#1c1d1f]">
+        <h2 className="border-b border-[#e0e0e0] px-4 py-4 text-lg font-bold text-[#1c1d1f] sm:px-6">
           {t("myCourses")}
         </h2>
         {myCourses.length === 0 ? (
@@ -104,9 +104,9 @@ export default async function DashboardPage() {
               return (
                 <li
                   key={c.id}
-                  className="flex flex-wrap items-center justify-between gap-3 px-6 py-4"
+                  className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6"
                 >
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="font-semibold text-[#1c1d1f]">{c.title}</p>
                     <p className="text-xs text-[#6a6f73]">
                       {t("progressLabel", {
@@ -125,7 +125,7 @@ export default async function DashboardPage() {
                   </div>
                   <Link
                     href={`/courses/${c.id}`}
-                    className="text-sm font-semibold text-[#0056d2] hover:underline"
+                    className="w-full text-sm font-semibold text-[#0056d2] hover:underline sm:w-auto"
                   >
                     {t("openCourse")}
                   </Link>
@@ -137,7 +137,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="overflow-hidden rounded-xl border border-[#e0e0e0] bg-white shadow-sm">
-        <h2 className="border-b border-[#e0e0e0] px-6 py-4 text-lg font-bold text-[#1c1d1f]">
+        <h2 className="border-b border-[#e0e0e0] px-4 py-4 text-lg font-bold text-[#1c1d1f] sm:px-6">
           {t("myResults")}
         </h2>
         {rows.length === 0 ? (
@@ -145,8 +145,48 @@ export default async function DashboardPage() {
             {t("noResults")}
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
+          <>
+            <div className="divide-y divide-[#e0e0e0] md:hidden">
+              {rows.map((r) => (
+                <article key={r.id} className="space-y-3 px-4 py-4">
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[#6a6f73]">
+                      {t("course")}
+                    </p>
+                    <p className="font-medium text-[#1c1d1f]">
+                      {asgnById[r.assignmentId]?.courseTitle ?? ""}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[#6a6f73]">
+                      {t("assignment")}
+                    </p>
+                    <p className="text-sm text-[#6a6f73]">
+                      {asgnById[r.assignmentId]?.title ?? ""}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#6a6f73]">
+                        {t("score")}
+                      </p>
+                      <p className="text-sm font-semibold text-[#1c1d1f]">{r.score ?? "—"}</p>
+                    </div>
+                    <span
+                      className={
+                        r.passed
+                          ? "rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800"
+                          : "rounded-full bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-900"
+                      }
+                    >
+                      {r.passed ? t("passed") : t("failed")}
+                    </span>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
+              <table className="min-w-full text-left text-sm">
               <thead className="bg-[#f5f7fa] text-xs font-bold uppercase tracking-wide text-[#6a6f73]">
                 <tr>
                   <th className="px-6 py-3">{t("course")}</th>
@@ -179,8 +219,9 @@ export default async function DashboardPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>

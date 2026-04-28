@@ -21,7 +21,7 @@ export function HeaderSearch() {
   return (
     <form
       onSubmit={onSubmit}
-      className="flex w-full items-center rounded-full border border-[#d9d9d9] bg-white pl-4 pr-1 shadow-inner transition focus-within:border-[#0056d2] focus-within:ring-2 focus-within:ring-[#0056d2]/20"
+      className="flex min-h-12 w-full items-center rounded-full border border-[#d9d9d9] bg-white pl-3 pr-1 shadow-inner transition focus-within:border-[#0056d2] focus-within:ring-2 focus-within:ring-[#0056d2]/20 sm:pl-4"
       role="search"
     >
       <input
@@ -29,7 +29,7 @@ export function HeaderSearch() {
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder={t("searchPlaceholder")}
-        className="min-h-11 flex-1 bg-transparent py-2 text-sm text-[#1c1d1f] outline-none placeholder:text-[#6a6f73]"
+        className="min-h-11 min-w-0 flex-1 bg-transparent py-2 text-sm text-[#1c1d1f] outline-none placeholder:text-[#6a6f73]"
         aria-label={t("searchPlaceholder")}
       />
       <button

@@ -135,8 +135,8 @@ export default async function CourseDetailPage(props: Props) {
         <CourseResourcesList courseId={course.id} canManage={false} />
       )}
 
-      <div className="rounded-xl border border-[#e0e0e0] bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between gap-4">
+      <div className="rounded-xl border border-[#e0e0e0] bg-white p-5 shadow-sm sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 className="text-lg font-bold text-[#1c1d1f]">{t("progress")}</h2>
           <span className="text-sm font-semibold text-[#0056d2]">{pct}%</span>
         </div>
@@ -148,8 +148,8 @@ export default async function CourseDetailPage(props: Props) {
         </div>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
-        <aside className="rounded-xl border border-[#e0e0e0] bg-white p-4 shadow-sm lg:sticky lg:top-24 lg:self-start">
+      <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="rounded-xl border border-[#e0e0e0] bg-white p-4 shadow-sm xl:sticky xl:top-24 xl:self-start">
           <h2 className="text-sm font-bold uppercase tracking-wide text-[#6a6f73]">
             {t("modules")}
           </h2>
@@ -168,20 +168,20 @@ export default async function CourseDetailPage(props: Props) {
                 <li key={a.id}>
                   {locked ? (
                     <span className={rowClass} title={t("locked")}>
-                      <span className="truncate pr-2">
+                      <span className="min-w-0 flex-1 truncate pr-2">
                         {i + 1}. {a.title}
                       </span>
-                      <span className="text-xs font-semibold">{t("lockedBadge")}</span>
+                      <span className="shrink-0 text-xs font-semibold">{t("lockedBadge")}</span>
                     </span>
                   ) : (
                     <Link
                       href={`/courses/${course.id}/lessons/${a.id}`}
                       className={rowClass}
                     >
-                      <span className="truncate pr-2">
+                      <span className="min-w-0 flex-1 truncate pr-2">
                         {i + 1}. {a.title}
                       </span>
-                      <span className="text-xs text-[#6a6f73]">
+                      <span className="shrink-0 text-xs text-[#6a6f73]">
                         {completed ? t("completedBadge") : current ? t("currentBadge") : ""}
                       </span>
                     </Link>
@@ -195,7 +195,7 @@ export default async function CourseDetailPage(props: Props) {
           )}
         </aside>
 
-        <div className="space-y-4 rounded-xl border border-[#e0e0e0] bg-white p-6 shadow-sm">
+        <div className="space-y-4 rounded-xl border border-[#e0e0e0] bg-white p-5 shadow-sm sm:p-6">
           <h2 className="text-lg font-bold text-[#1c1d1f]">{t("modules")}</h2>
           {lessons.length === 0 ? (
             <p className="text-sm text-[#6a6f73]">{t("noAssignments")}</p>
@@ -209,7 +209,7 @@ export default async function CourseDetailPage(props: Props) {
                     key={a.id}
                     className="flex flex-wrap items-center justify-between gap-3 py-4 first:pt-0 last:pb-0"
                   >
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <p className="font-semibold text-[#1c1d1f]">
                         {i + 1}. {a.title}
                       </p>
@@ -228,7 +228,7 @@ export default async function CourseDetailPage(props: Props) {
                     ) : (
                       <Link
                         href={`/courses/${course.id}/lessons/${a.id}`}
-                        className="rounded bg-[#0056d2] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00419e]"
+                        className="w-full rounded bg-[#0056d2] px-4 py-2 text-center text-sm font-semibold text-white hover:bg-[#00419e] sm:w-auto"
                       >
                         Open
                       </Link>
