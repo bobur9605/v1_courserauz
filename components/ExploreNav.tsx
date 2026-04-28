@@ -6,14 +6,16 @@ import { useEffect, useRef, useState } from "react";
 
 type Props = {
   loggedIn: boolean;
-  isAdmin: boolean;
-  showTeacherPanel: boolean;
+  role?: "SUPERADMIN" | "TEACHER" | "STUDENT";
 };
 
-export function ExploreNav({ loggedIn, isAdmin, showTeacherPanel }: Props) {
+export function ExploreNav({ loggedIn, role }: Props) {
   const t = useTranslations("header");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const isTeacher = role === "TEACHER";
+  const isSuperadmin = role === "SUPERADMIN";
+  const canSeeStudentLinks = role === "STUDENT" || !loggedIn;
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
@@ -55,7 +57,7 @@ export function ExploreNav({ loggedIn, isAdmin, showTeacherPanel }: Props) {
           >
             {t("exploreCatalog")}
           </Link>
-          {loggedIn && (
+          {loggedIn && !isTeacher && !isSuperadmin && (
             <Link
               href="/dashboard"
               className="block px-4 py-2.5 text-sm font-semibold text-[#1c1d1f] hover:bg-[#f3f4f6]"
@@ -64,14 +66,16 @@ export function ExploreNav({ loggedIn, isAdmin, showTeacherPanel }: Props) {
               {t("myDashboard")}
             </Link>
           )}
-          <Link
-            href="/courses"
-            className="block px-4 py-2.5 text-sm font-semibold text-[#1c1d1f] hover:bg-[#f3f4f6]"
-            onClick={() => setOpen(false)}
-          >
-            {t("codeLabs")}
-          </Link>
-          {showTeacherPanel && (
+          {canSeeStudentLinks && (
+            <Link
+              href="/courses"
+              className="block px-4 py-2.5 text-sm font-semibold text-[#1c1d1f] hover:bg-[#f3f4f6]"
+              onClick={() => setOpen(false)}
+            >
+              {t("codeLabs")}
+            </Link>
+          )}
+          {(isTeacher || isSuperadmin) && (
             <Link
               href="/teacher"
               className="block px-4 py-2.5 text-sm font-semibold text-[#0056d2] hover:bg-[#eef5ff]"
@@ -80,7 +84,7 @@ export function ExploreNav({ loggedIn, isAdmin, showTeacherPanel }: Props) {
               {t("teacherPanel")}
             </Link>
           )}
-          {isAdmin && (
+          {isSuperadmin && (
             <Link
               href="/admin"
               className="block px-4 py-2.5 text-sm font-semibold text-[#0056d2] hover:bg-[#eef5ff]"
