@@ -23,22 +23,26 @@ export function HeaderUserMenu({ fullName, profileImageUrl }: Props) {
   }, []);
 
   const initial = (fullName.trim()[0] || "U").toUpperCase();
+  const shortName = fullName.trim().split(/\s+/)[0] || fullName;
 
   return (
     <div className="relative" ref={ref}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-[#d9d9d9] bg-white text-sm font-bold text-[#0056d2] shadow-sm transition hover:bg-[#f5f9ff] focus:outline-none focus:ring-2 focus:ring-[#0056d2]/20"
+        className="flex h-10 items-center gap-2 rounded-full border border-[#d9d9d9] bg-white px-2 pr-3 text-sm font-semibold text-[#1c1d1f] shadow-sm transition hover:bg-[#f5f9ff] focus:outline-none focus:ring-2 focus:ring-[#0056d2]/20"
         aria-label="Open user menu"
         aria-expanded={open}
         aria-haspopup="menu"
       >
-        {profileImageUrl ? (
-          <img src={profileImageUrl} alt={fullName} className="h-full w-full object-cover" />
-        ) : (
-          initial
-        )}
+        <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-[#eef5ff] text-sm font-bold text-[#0056d2]">
+          {profileImageUrl ? (
+            <img src={profileImageUrl} alt={fullName} className="h-full w-full object-cover" />
+          ) : (
+            initial
+          )}
+        </span>
+        <span className="hidden max-w-[110px] truncate sm:inline">{shortName}</span>
       </button>
 
       {open && (
