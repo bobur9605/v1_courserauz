@@ -4,6 +4,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { canManageCourseContent } from "@/lib/coursePermissions";
 import { newId } from "@/lib/ids";
+import {
+  isSchemaNotReadyError,
+  schemaNotReadyResponse,
+} from "@/lib/supabase/schemaErrors";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -39,11 +43,14 @@ export async function GET(_req: Request, ctx: Ctx) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const { data: lessons } = await supabase
+  const { data: lessons, error: lessonsError } = await supabase
     .from("Lesson")
     .select("id, title, content, order, isPublished, assignmentId")
     .eq("courseId", courseId)
     .order("order", { ascending: true });
+  if (isSchemaNotReadyError(lessonsError)) {
+    return schemaNotReadyResponse("lessons");
+  }
 
   return NextResponse.json(lessons ?? []);
 }
@@ -99,6 +106,9 @@ export async function POST(req: Request, ctx: Ctx) {
       order: nextOrder,
     });
     if (assignmentError) {
+      if (isSchemaNotReadyError(assignmentError)) {
+        return schemaNotReadyResponse("lessons");
+      }
       return NextResponse.json({ error: "bad_request" }, { status: 400 });
     }
   }
@@ -118,11 +128,20 @@ export async function POST(req: Request, ctx: Ctx) {
     .select("id, title, content, order, isPublished, assignmentId")
     .single();
   if (lessonError || !lesson) {
+    if (isSchemaNotReadyError(lessonError)) {
+      return schemaNotReadyResponse("lessons");
+    }
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
 
   if (assignmentId) {
-    await supabase.from("Assignment").update({ lessonId }).eq("id", assignmentId);
+    const { error: linkError } = await supabase
+      .from("Assignment")
+      .update({ lessonId })
+      .eq("id", assignmentId);
+    if (isSchemaNotReadyError(linkError)) {
+      return schemaNotReadyResponse("lessons");
+    }
   }
 
   return NextResponse.json(lesson);

@@ -26,6 +26,8 @@ export function TeacherLessonsManager({
   const [rows, setRows] = useState<LessonRow[]>(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const schemaHelp =
+    "Database setup for lessons is incomplete. Run the latest Supabase migrations, then retry.";
   const [form, setForm] = useState({
     title: "",
     content: "",
@@ -44,7 +46,12 @@ export function TeacherLessonsManager({
       body: JSON.stringify({ orderedIds: next.map((r) => r.id) }),
     });
     setBusy(false);
-    if (!res.ok) setError("Could not save lesson order.");
+    if (!res.ok) {
+      const payload = (await res.json().catch(() => null)) as
+        | { error?: string; message?: string }
+        | null;
+      setError(payload?.error === "schema_not_ready" ? schemaHelp : "Could not save lesson order.");
+    }
   }
 
   function move(idx: number, dir: -1 | 1) {
@@ -81,7 +88,10 @@ export function TeacherLessonsManager({
     });
     setBusy(false);
     if (!res.ok) {
-      setError("Could not create lesson.");
+      const payload = (await res.json().catch(() => null)) as
+        | { error?: string; message?: string }
+        | null;
+      setError(payload?.error === "schema_not_ready" ? schemaHelp : "Could not create lesson.");
       return;
     }
     const created = (await res.json()) as LessonRow;

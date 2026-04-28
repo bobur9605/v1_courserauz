@@ -14,6 +14,8 @@ export function ResourceUploadForm({ courseId, onUploaded }: Props) {
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const schemaHelp =
+    "Database setup for resources is incomplete. Run the latest Supabase migrations, then retry.";
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,7 +38,10 @@ export function ResourceUploadForm({ courseId, onUploaded }: Props) {
     });
     setBusy(false);
     if (!res.ok) {
-      setMsg(t("uploadFailed"));
+      const payload = (await res.json().catch(() => null)) as
+        | { error?: string; message?: string }
+        | null;
+      setMsg(payload?.error === "schema_not_ready" ? schemaHelp : t("uploadFailed"));
       return;
     }
     setTitle("");

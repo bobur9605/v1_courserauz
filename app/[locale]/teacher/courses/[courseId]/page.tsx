@@ -6,6 +6,7 @@ import { getSession } from "@/lib/auth";
 import { canManageCourseContent } from "@/lib/coursePermissions";
 import { TeacherResourcesSection } from "@/components/TeacherResourcesSection";
 import { TeacherLessonsManager } from "@/components/TeacherLessonsManager";
+import { isSchemaNotReadyError } from "@/lib/supabase/schemaErrors";
 
 export const dynamic = "force-dynamic";
 
@@ -35,12 +36,13 @@ export default async function TeacherCoursePage(props: Props) {
   const t = await getTranslations("teacher");
   const tc = await getTranslations("course");
 
-  const { data: lessonsRaw } = await supabase
+  const { data: lessonsRaw, error: lessonsError } = await supabase
     .from("Lesson")
     .select("id, title, content, order, isPublished, assignmentId")
     .eq("courseId", courseId)
     .order("order", { ascending: true });
   const lessons = lessonsRaw ?? [];
+  const lessonsSchemaMissing = isSchemaNotReadyError(lessonsError);
 
   const { data: enrollRows } = await supabase
     .from("Enrollment")
@@ -114,6 +116,12 @@ export default async function TeacherCoursePage(props: Props) {
             Lessons
           </h2>
           <div className="px-6 py-4">
+            {lessonsSchemaMissing ? (
+              <p className="mb-4 text-sm text-red-600">
+                Database setup for lessons is incomplete. Run the latest Supabase
+                migrations, then retry.
+              </p>
+            ) : null}
             <TeacherLessonsManager courseId={courseId} lessons={lessons} />
           </div>
           {lessons.length === 0 && (

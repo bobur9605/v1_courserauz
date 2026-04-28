@@ -25,16 +25,31 @@ export function CourseResourcesList({
   const t = useTranslations("course");
   const [rows, setRows] = useState<Row[] | null>(null);
   const [err, setErr] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
   const load = useCallback(() => {
     void fetch(`/api/courses/${courseId}/resources`)
       .then((r) => {
-        if (!r.ok) throw new Error("fail");
+        if (!r.ok) {
+          return r.json().catch(() => null).then((payload) => {
+            if (payload?.error === "schema_not_ready") {
+              throw new Error(
+                "Database setup for resources is incomplete. Run the latest Supabase migrations, then retry.",
+              );
+            }
+            throw new Error("fail");
+          });
+        }
         return r.json() as Promise<Row[]>;
       })
-      .then(setRows)
-      .catch(() => {
-        setErr(true);
+      .then((data) => {
+        setErr(false);
+        setMessage(null);
+        setRows(data);
+      })
+      .catch((error: unknown) => {
+        setErr(!(error instanceof Error));
+        setMessage(error instanceof Error ? error.message : null);
         setRows([]);
       });
   }, [courseId]);
@@ -63,6 +78,9 @@ export function CourseResourcesList({
   return (
     <div className="rounded-xl border border-[#e0e0e0] bg-white p-6 shadow-sm">
       <h2 className="text-lg font-bold text-[#1c1d1f]">{t("resources")}</h2>
+      {message ? (
+        <p className="mt-2 text-sm text-red-600">{message}</p>
+      ) : null}
       {rows.length === 0 ? (
         <p className="mt-2 text-sm text-[#6a6f73]">{t("noResources")}</p>
       ) : (

@@ -4,6 +4,10 @@ import { getSession } from "@/lib/auth";
 import { canManageCourseContent } from "@/lib/coursePermissions";
 import { newId } from "@/lib/ids";
 import { COURSE_RESOURCES_BUCKET } from "@/lib/courseResourcesBucket";
+import {
+  isSchemaNotReadyError,
+  schemaNotReadyResponse,
+} from "@/lib/supabase/schemaErrors";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -48,6 +52,9 @@ export async function GET(_req: Request, ctx: Ctx) {
     .eq("courseId", courseId)
     .order("createdAt", { ascending: false });
   if (error) {
+    if (isSchemaNotReadyError(error)) {
+      return schemaNotReadyResponse("course resources");
+    }
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
   return NextResponse.json(rows ?? []);
@@ -114,6 +121,10 @@ export async function POST(req: Request, ctx: Ctx) {
     .select("id, title, mimeType, size, createdAt")
     .single();
   if (insErr || !row) {
+    if (isSchemaNotReadyError(insErr)) {
+      await supabase.storage.from(COURSE_RESOURCES_BUCKET).remove([storagePath]);
+      return schemaNotReadyResponse("course resources");
+    }
     await supabase.storage.from(COURSE_RESOURCES_BUCKET).remove([storagePath]);
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
