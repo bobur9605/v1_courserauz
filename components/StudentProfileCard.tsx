@@ -10,12 +10,12 @@ type Props = {
   profileImageUrl: string | null;
 };
 
-export default function TeacherProfileCard(props: Props) {
+export default function StudentProfileCard(props: Props) {
   return (
     <AccountProfileCard
-      namespace="teacher"
-      profilePath="/api/teacher/profile"
-      imageUploadPath="/api/teacher/profile/image"
+      namespace="dashboard"
+      profilePath="/api/student/profile"
+      imageUploadPath="/api/student/profile/image"
       fullName={props.fullName}
       email={props.email}
       age={props.age}

@@ -157,10 +157,12 @@ export default async function CourseDetailPage(props: Props) {
             {lessons.map((a, i) => {
               const r = resultsMap[a.id];
               const locked = !!lockById[a.id];
+              const completed = !!r?.passed;
+              const current = !locked && !completed;
               const rowClass = `flex items-center justify-between rounded-lg px-3 py-2 text-sm font-semibold ${
                 locked
                   ? "cursor-not-allowed opacity-50 text-[#6a6f73]"
-                  : `hover:bg-[#eef5ff] ${r?.passed ? "text-emerald-700" : "text-[#1c1d1f]"}`
+                  : `hover:bg-[#eef5ff] ${completed ? "text-emerald-700" : "text-[#1c1d1f]"}`
               }`;
               return (
                 <li key={a.id}>
@@ -169,7 +171,7 @@ export default async function CourseDetailPage(props: Props) {
                       <span className="truncate pr-2">
                         {i + 1}. {a.title}
                       </span>
-                      <span className="text-xs">🔒</span>
+                      <span className="text-xs font-semibold">{t("lockedBadge")}</span>
                     </span>
                   ) : (
                     <Link
@@ -179,9 +181,9 @@ export default async function CourseDetailPage(props: Props) {
                       <span className="truncate pr-2">
                         {i + 1}. {a.title}
                       </span>
-                      {r?.passed && (
-                        <span className="text-xs text-emerald-600">✓</span>
-                      )}
+                      <span className="text-xs text-[#6a6f73]">
+                        {completed ? t("completedBadge") : current ? t("currentBadge") : ""}
+                      </span>
                     </Link>
                   )}
                 </li>
@@ -201,6 +203,7 @@ export default async function CourseDetailPage(props: Props) {
             <ul className="divide-y divide-[#e0e0e0]">
               {lessons.map((a, i) => {
                 const locked = !!lockById[a.id];
+                const completed = !!resultsMap[a.id]?.passed;
                 return (
                   <li
                     key={a.id}
@@ -211,7 +214,11 @@ export default async function CourseDetailPage(props: Props) {
                         {i + 1}. {a.title}
                       </p>
                       <p className="text-xs text-[#6a6f73]">
-                        {locked ? t("locked") : "Lesson"}
+                        {locked
+                          ? t("locked")
+                          : completed
+                            ? t("completedBadge")
+                            : t("currentBadge")}
                       </p>
                     </div>
                     {locked ? (

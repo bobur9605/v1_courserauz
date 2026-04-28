@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { newId } from "@/lib/ids";
+import { studentMayAccessLessonOrder } from "@/lib/lessonGatingServer";
 
 type Ctx = { params: Promise<{ id: string; lessonId: string }> };
 
@@ -15,7 +16,7 @@ export async function POST(_req: Request, ctx: Ctx) {
 
   const { data: lesson } = await supabase
     .from("Lesson")
-    .select("id, assignmentId, courseId")
+    .select("id, assignmentId, courseId, order")
     .eq("id", lessonId)
     .eq("courseId", courseId)
     .maybeSingle();
@@ -34,6 +35,9 @@ export async function POST(_req: Request, ctx: Ctx) {
     .maybeSingle();
   if (!enrollment) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+  if (!(await studentMayAccessLessonOrder(session.sub, courseId, lesson.order))) {
+    return NextResponse.json({ error: "sequence_locked" }, { status: 403 });
   }
 
   const { error } = await supabase.from("LessonCompletion").upsert(

@@ -2,6 +2,10 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { Link, redirect } from "@/i18n/routing";
+import StudentProfileCard from "@/components/StudentProfileCard";
+import { StudentProgressCharts } from "@/components/StudentProgressCharts";
+import { getStudentCourseProgress } from "@/lib/studentProgress";
+import { ensureStudentUserRecord } from "@/lib/userProfile";
 
 export const dynamic = "force-dynamic";
 
@@ -11,10 +15,14 @@ export default async function DashboardPage() {
   if (!session) {
     return redirect({ href: "/login", locale });
   }
+  if (session.role !== "STUDENT") {
+    return redirect({ href: session.role === "SUPERADMIN" ? "/admin" : "/teacher", locale });
+  }
 
   const userId = session.sub;
   const t = await getTranslations("dashboard");
   const supabase = createAdminClient();
+  const profile = await ensureStudentUserRecord(session);
 
   const { data: enrollRows } = await supabase
     .from("Enrollment")
@@ -25,38 +33,7 @@ export default async function DashboardPage() {
     ? await supabase.from("Course").select("id, title").in("id", enrolledCourseIds)
     : { data: [] };
   const myCourses = myCoursesRaw ?? [];
-
-  let progressByCourse: Record<string, { done: number; total: number }> = {};
-  if (enrolledCourseIds.length) {
-    const { data: allAsg } = await supabase
-      .from("Assignment")
-      .select("id, courseId")
-      .in("courseId", enrolledCourseIds);
-    const { data: myPassed } = await supabase
-      .from("Result")
-      .select("assignmentId, passed")
-      .eq("studentId", userId)
-      .eq("passed", true);
-    const passedIds = new Set(
-      (myPassed ?? []).filter((r) => r.passed).map((r) => r.assignmentId),
-    );
-    const totalByCourse = new Map<string, number>();
-    for (const a of allAsg ?? []) {
-      totalByCourse.set(a.courseId, (totalByCourse.get(a.courseId) ?? 0) + 1);
-    }
-    const doneByCourse = new Map<string, number>();
-    for (const a of allAsg ?? []) {
-      if (passedIds.has(a.id)) {
-        doneByCourse.set(a.courseId, (doneByCourse.get(a.courseId) ?? 0) + 1);
-      }
-    }
-    for (const cid of enrolledCourseIds) {
-      progressByCourse[cid] = {
-        done: doneByCourse.get(cid) ?? 0,
-        total: totalByCourse.get(cid) ?? 0,
-      };
-    }
-  }
+  const progressByCourse = await getStudentCourseProgress(userId, myCourses);
 
   const { data: rowsRaw } = await supabase
     .from("Result")
@@ -96,6 +73,16 @@ export default async function DashboardPage() {
         <p className="mt-2 text-[#6a6f73]">{t("subtitle")}</p>
       </div>
 
+      <StudentProfileCard
+        fullName={profile.fullName}
+        email={profile.email}
+        age={profile.age}
+        gender={profile.gender}
+        profileImageUrl={profile.profileImageUrl}
+      />
+
+      <StudentProgressCharts summaries={Object.values(progressByCourse)} />
+
       <div className="overflow-hidden rounded-xl border border-[#e0e0e0] bg-white shadow-sm">
         <h2 className="border-b border-[#e0e0e0] px-6 py-4 text-lg font-bold text-[#1c1d1f]">
           {t("myCourses")}
@@ -107,8 +94,13 @@ export default async function DashboardPage() {
         ) : (
           <ul className="divide-y divide-[#e0e0e0]">
             {myCourses.map((c) => {
-              const pr = progressByCourse[c.id] ?? { done: 0, total: 0 };
-              const pct = pr.total ? Math.round((pr.done / pr.total) * 100) : 0;
+              const pr = progressByCourse[c.id] ?? {
+                completedLessons: 0,
+                totalLessons: 0,
+                percent: 0,
+                nextLessonTitle: null,
+                isComplete: false,
+              };
               return (
                 <li
                   key={c.id}
@@ -118,10 +110,17 @@ export default async function DashboardPage() {
                     <p className="font-semibold text-[#1c1d1f]">{c.title}</p>
                     <p className="text-xs text-[#6a6f73]">
                       {t("progressLabel", {
-                        done: String(pr.done),
-                        total: String(pr.total),
-                        pct: String(pct),
+                        done: String(pr.completedLessons),
+                        total: String(pr.totalLessons),
+                        pct: String(pr.percent),
                       })}
+                    </p>
+                    <p className="mt-1 text-xs text-[#6a6f73]">
+                      {pr.isComplete
+                        ? t("courseCompleted")
+                        : t("nextLessonLabel", {
+                            title: pr.nextLessonTitle ?? t("nextLessonFallback"),
+                          })}
                     </p>
                   </div>
                   <Link

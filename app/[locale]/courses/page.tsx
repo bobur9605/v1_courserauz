@@ -2,6 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
+import { getStudentCourseProgress } from "@/lib/studentProgress";
 
 export const dynamic = "force-dynamic";
 
@@ -37,12 +38,17 @@ export default async function CoursesPage(props: PageProps) {
     : allCourses;
 
   let enrolledSet = new Set<string>();
+  let progressByCourse: Awaited<ReturnType<typeof getStudentCourseProgress>> = {};
   if (session) {
     const { data: enrolled } = await supabase
       .from("Enrollment")
       .select("courseId")
       .eq("userId", session.sub);
     enrolledSet = new Set((enrolled ?? []).map((e) => e.courseId));
+    if (session.role === "STUDENT" && enrolledSet.size) {
+      const enrolledCourses = allCourses.filter((course) => enrolledSet.has(course.id));
+      progressByCourse = await getStudentCourseProgress(session.sub, enrolledCourses);
+    }
   }
 
   function levelLabel(key: string) {
@@ -95,7 +101,25 @@ export default async function CoursesPage(props: PageProps) {
                       {t("enrolled")}
                     </span>
                   )}
+                  {progressByCourse[c.id] && (
+                    <span className="rounded bg-[#f5f7fa] px-2 py-1 text-[#1c1d1f]">
+                      {t("progressBadge", {
+                        pct: String(progressByCourse[c.id].percent),
+                      })}
+                    </span>
+                  )}
                 </div>
+                {progressByCourse[c.id] && (
+                  <p className="mt-3 text-xs text-[#6a6f73]">
+                    {progressByCourse[c.id].isComplete
+                      ? t("courseCompleted")
+                      : t("nextLessonLabel", {
+                          title:
+                            progressByCourse[c.id].nextLessonTitle ??
+                            t("nextLessonFallback"),
+                        })}
+                  </p>
+                )}
               </div>
               <div className="flex items-center justify-between border-t border-[#e0e0e0] px-5 py-3">
                 <span className="text-xs text-[#6a6f73]">
