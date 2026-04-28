@@ -250,6 +250,8 @@
     "photoUploadHint": "PNG/JPG, 2MB gacha.",
     "photoUploading": "Rasm yuklanmoqda…",
     "photoUploadError": "Rasmni yuklab bo‘lmadi. Qayta urinib ko‘ring.",
+    "firstName": "Ism",
+    "lastName": "Familiya",
     "newPassword": "Yangi parol",
     "newPasswordPlaceholder": "Agar o‘zgartirmasangiz, bo‘sh qoldiring",
     "saveProfile": "Profilni saqlash",

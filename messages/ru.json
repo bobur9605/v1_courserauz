@@ -250,6 +250,8 @@
     "photoUploadHint": "PNG/JPG до 2MB.",
     "photoUploading": "Загрузка изображения…",
     "photoUploadError": "Не удалось загрузить изображение. Попробуйте снова.",
+    "firstName": "Имя",
+    "lastName": "Фамилия",
     "newPassword": "Новый пароль",
     "newPasswordPlaceholder": "Оставьте пустым, если не хотите менять",
     "saveProfile": "Сохранить профиль",

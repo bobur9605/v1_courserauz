@@ -5,7 +5,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 const updateSchema = z.object({
   fullName: z.string().trim().min(2).max(120),
-  email: z.string().trim().email(),
   age: z.number().int().min(16).max(100).nullable(),
   gender: z.enum(["male", "female", "other", ""]).nullable(),
   profileImageUrl: z.string().trim().url().max(500).nullable(),
@@ -45,23 +44,10 @@ export async function PATCH(req: Request) {
   }
 
   const supabase = createAdminClient();
-  const normalizedEmail = body.email.toLowerCase();
   const normalizedGender = body.gender === "" ? null : body.gender;
-
-  const { data: emailOwner } = await supabase
-    .from("User")
-    .select("id")
-    .eq("email", normalizedEmail)
-    .neq("id", session.sub)
-    .maybeSingle();
-
-  if (emailOwner) {
-    return Response.json({ error: "email_in_use" }, { status: 409 });
-  }
 
   const updatePayload: {
     fullName: string;
-    email: string;
     age: number | null;
     gender: "male" | "female" | "other" | null;
     profileImageUrl: string | null;
@@ -70,7 +56,6 @@ export async function PATCH(req: Request) {
     tempPasswordIssuedAt?: null;
   } = {
     fullName: body.fullName,
-    email: normalizedEmail,
     age: body.age,
     gender: normalizedGender,
     profileImageUrl: body.profileImageUrl,
@@ -90,7 +75,7 @@ export async function PATCH(req: Request) {
   await signSession({
     sub: session.sub,
     role: session.role as Role,
-    email: normalizedEmail,
+    email: session.email,
     fullName: body.fullName,
     mustChangePassword: false,
   });

@@ -15,8 +15,9 @@ export default function TeacherProfileCard(props: Props) {
   const t = useTranslations("teacher");
   const tf = useTranslations("form");
 
-  const [fullName, setFullName] = useState(props.fullName);
-  const [email, setEmail] = useState(props.email);
+  const initialNameParts = props.fullName.trim().split(/\s+/).filter(Boolean);
+  const [firstName, setFirstName] = useState(initialNameParts[0] ?? "");
+  const [lastName, setLastName] = useState(initialNameParts.slice(1).join(" "));
   const [age, setAge] = useState(props.age ? String(props.age) : "");
   const [gender, setGender] = useState(props.gender ?? "");
   const [profileImageUrl, setProfileImageUrl] = useState(props.profileImageUrl ?? "");
@@ -59,9 +60,9 @@ export default function TeacherProfileCard(props: Props) {
     setSaved(false);
     setError(null);
 
+    const normalizedFullName = `${firstName.trim()} ${lastName.trim()}`.trim();
     const payload = {
-      fullName,
-      email,
+      fullName: normalizedFullName,
       age: age.trim() === "" ? null : Number(age),
       gender: gender.trim() === "" ? null : gender,
       profileImageUrl: profileImageUrl.trim() === "" ? null : profileImageUrl.trim(),
@@ -88,7 +89,8 @@ export default function TeacherProfileCard(props: Props) {
     setSaved(true);
   }
 
-  const photoFallback = fullName
+  const displayName = `${firstName.trim()} ${lastName.trim()}`.trim() || props.fullName;
+  const photoFallback = displayName
     .split(" ")
     .map((p) => p[0]?.toUpperCase() ?? "")
     .join("")
@@ -104,7 +106,7 @@ export default function TeacherProfileCard(props: Props) {
           {profileImageUrl ? (
             <img
               src={profileImageUrl}
-              alt={fullName}
+              alt={displayName}
               className="h-20 w-20 rounded-full border border-[#e0e0e0] object-cover"
             />
           ) : (
@@ -135,22 +137,30 @@ export default function TeacherProfileCard(props: Props) {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-semibold">{tf("fullName")}</label>
+            <label className="block text-sm font-semibold">{t("firstName")}</label>
             <input
               required
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="mt-1 w-full rounded-md border border-[#e0e0e0] px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold">{t("lastName")}</label>
+            <input
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
               className="mt-1 w-full rounded-md border border-[#e0e0e0] px-3 py-2 text-sm"
             />
           </div>
           <div>
             <label className="block text-sm font-semibold">{tf("email")}</label>
             <input
-              required
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-md border border-[#e0e0e0] px-3 py-2 text-sm"
+              value={props.email}
+              readOnly
+              disabled
+              className="mt-1 w-full cursor-not-allowed rounded-md border border-[#e0e0e0] bg-[#f5f7fa] px-3 py-2 text-sm text-[#6a6f73]"
             />
           </div>
           <div>
@@ -177,7 +187,7 @@ export default function TeacherProfileCard(props: Props) {
               <option value="other">{t("genderOther")}</option>
             </select>
           </div>
-          <div className="md:col-span-2">
+          <div>
             <label className="block text-sm font-semibold">{t("newPassword")}</label>
             <input
               type="password"

@@ -250,6 +250,8 @@
     "photoUploadHint": "PNG/JPG up to 2MB.",
     "photoUploading": "Uploading image…",
     "photoUploadError": "Could not upload image. Please try again.",
+    "firstName": "First name",
+    "lastName": "Last name",
     "newPassword": "New password",
     "newPasswordPlaceholder": "Leave empty if you do not want to change it",
     "saveProfile": "Save profile",
