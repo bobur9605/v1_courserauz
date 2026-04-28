@@ -25,14 +25,23 @@ export async function POST(req: Request) {
     if (!ok) {
       return NextResponse.json({ error: "invalid" }, { status: 401 });
     }
+
+    const rawRole = String(user.role ?? "").toUpperCase();
+    const normalizedRole: Role =
+      rawRole === "ADMIN"
+        ? "SUPERADMIN"
+        : rawRole === "SUPERADMIN" || rawRole === "TEACHER" || rawRole === "STUDENT"
+          ? rawRole
+          : "STUDENT";
+
     await signSession({
       sub: user.id,
-      role: user.role as Role,
+      role: normalizedRole,
       email: user.email,
       fullName: user.fullName,
       mustChangePassword: !!user.mustChangePassword,
     });
-    return NextResponse.json({ ok: true, role: user.role });
+    return NextResponse.json({ ok: true, role: normalizedRole });
   } catch {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }

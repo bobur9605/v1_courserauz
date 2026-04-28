@@ -12,6 +12,11 @@ export default function LoginPage() {
   const [error, setError] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  function localePrefixFromPathname(pathname: string) {
+    const m = pathname.match(/^\/(uz|en|ru)(\/|$)/);
+    return m ? `/${m[1]}` : "";
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -26,7 +31,14 @@ export default function LoginPage() {
       setError(true);
       return;
     }
-    window.location.assign("/dashboard");
+    const json: unknown = await res.json().catch(() => null);
+    const role = (json as { role?: unknown } | null)?.role;
+    const prefix = localePrefixFromPathname(window.location.pathname);
+    if (role === "SUPERADMIN") {
+      window.location.assign(`${prefix}/admin`);
+      return;
+    }
+    window.location.assign(`${prefix}/dashboard`);
   }
 
   return (
