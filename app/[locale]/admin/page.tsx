@@ -72,6 +72,12 @@ export default async function AdminPage() {
       },
     ]),
   );
+  const { data: teachersRaw } = await supabase
+    .from("User")
+    .select("id, fullName, email, age, gender, profileImageUrl")
+    .eq("role", "TEACHER")
+    .order("fullName", { ascending: true });
+  const teachers = teachersRaw ?? [];
 
   return (
     <div className="space-y-10">
@@ -156,6 +162,44 @@ export default async function AdminPage() {
                   <td className="px-6 py-3 text-[#6a6f73]">{r.feedback || "—"}</td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-[#e0e0e0] bg-white shadow-sm">
+        <h2 className="border-b border-[#e0e0e0] px-6 py-4 text-lg font-bold">
+          {t("teachers")}
+        </h2>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="bg-[#f5f7fa] text-xs font-bold uppercase text-[#6a6f73]">
+              <tr>
+                <th className="px-6 py-3">{tf("user")}</th>
+                <th className="px-6 py-3">{tf("age")}</th>
+                <th className="px-6 py-3">{tf("gender")}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#e0e0e0]">
+              {teachers.map((teacher) => (
+                <tr key={teacher.id} className="hover:bg-[#fafafa]">
+                  <td className="px-6 py-3">
+                    <div className="font-medium text-[#1c1d1f]">{teacher.fullName}</div>
+                    <div className="text-xs text-[#6a6f73]">{teacher.email}</div>
+                  </td>
+                  <td className="px-6 py-3 text-[#6a6f73]">{teacher.age ?? "—"}</td>
+                  <td className="px-6 py-3 text-[#6a6f73]">
+                    {teacher.gender ? t(`gender.${teacher.gender}`) : "—"}
+                  </td>
+                </tr>
+              ))}
+              {teachers.length === 0 && (
+                <tr>
+                  <td className="px-6 py-4 text-[#6a6f73]" colSpan={3}>
+                    {t("noTeachers")}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

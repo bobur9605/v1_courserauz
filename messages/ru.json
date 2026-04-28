@@ -213,8 +213,14 @@
     "newAssignment": "Новое задание",
     "allCourses": "Курсы",
     "students": "Результаты студентов",
+    "teachers": "Преподаватели",
     "assignments": "Задания",
-    "noTeachers": "Нет пользователей с ролью TEACHER. Сначала создайте такого пользователя."
+    "noTeachers": "Нет пользователей с ролью TEACHER. Сначала создайте такого пользователя.",
+    "gender": {
+      "male": "Мужской",
+      "female": "Женский",
+      "other": "Другое"
+    }
   },
   "teacher": {
     "title": "Кабинет преподавателя",
@@ -236,7 +242,24 @@
     "progressCol": "Прогресс",
     "noStudents": "Пока никто не записан.",
     "viewPublicCourse": "Страница курса",
-    "backToCourse": "Назад к курсу"
+    "backToCourse": "Назад к курсу",
+    "profileTitle": "Мой профиль",
+    "profileSubtitle": "Поддерживайте личные данные в актуальном состоянии.",
+    "photoUrl": "URL фото профиля",
+    "uploadPhoto": "Загрузить фото профиля",
+    "photoUploadHint": "PNG/JPG до 2MB.",
+    "photoUploading": "Загрузка изображения…",
+    "photoUploadError": "Не удалось загрузить изображение. Попробуйте снова.",
+    "newPassword": "Новый пароль",
+    "newPasswordPlaceholder": "Оставьте пустым, если не хотите менять",
+    "saveProfile": "Сохранить профиль",
+    "profileSaved": "Профиль успешно обновлён.",
+    "profileSaveError": "Не удалось сохранить профиль. Попробуйте снова.",
+    "emailInUse": "Этот email уже используется.",
+    "selectGender": "Выберите пол",
+    "genderMale": "Мужской",
+    "genderFemale": "Женский",
+    "genderOther": "Другое"
   },
   "form": {
     "courseTitle": "Название курса",
@@ -257,7 +280,9 @@
     "saveGrade": "Сохранить оценку",
     "user": "Пользователь",
     "assignTeacher": "Ответственный преподаватель",
-    "resourceTitle": "Название материала"
+    "resourceTitle": "Название материала",
+    "age": "Возраст",
+    "gender": "Пол"
   },
   "footer": {
     "rights": "© 2026 WD-EDU. Учебный проект.",

@@ -213,8 +213,14 @@
     "newAssignment": "Yangi topshiriq",
     "allCourses": "Mavjud kurslar",
     "students": "Talabalar natijalari",
+    "teachers": "O‘qituvchilar",
     "assignments": "Topshiriqlar",
-    "noTeachers": "Tizimda TEACHER ro‘li bilan foydalanuvchi yo‘q. Avval uni yarating."
+    "noTeachers": "Tizimda TEACHER ro‘li bilan foydalanuvchi yo‘q. Avval uni yarating.",
+    "gender": {
+      "male": "Erkak",
+      "female": "Ayol",
+      "other": "Boshqa"
+    }
   },
   "teacher": {
     "title": "O‘qituvchi kabineti",
@@ -236,7 +242,24 @@
     "progressCol": "Progress",
     "noStudents": "Hozircha ro‘yxatdan o‘tgan talaba yo‘q.",
     "viewPublicCourse": "Kurs sahifasi",
-    "backToCourse": "Kursga qaytish"
+    "backToCourse": "Kursga qaytish",
+    "profileTitle": "Mening profilim",
+    "profileSubtitle": "Shaxsiy ma'lumotlaringizni yangilab turing.",
+    "photoUrl": "Profil rasmi URL",
+    "uploadPhoto": "Profil rasmini yuklash",
+    "photoUploadHint": "PNG/JPG, 2MB gacha.",
+    "photoUploading": "Rasm yuklanmoqda…",
+    "photoUploadError": "Rasmni yuklab bo‘lmadi. Qayta urinib ko‘ring.",
+    "newPassword": "Yangi parol",
+    "newPasswordPlaceholder": "Agar o‘zgartirmasangiz, bo‘sh qoldiring",
+    "saveProfile": "Profilni saqlash",
+    "profileSaved": "Profil muvaffaqiyatli yangilandi.",
+    "profileSaveError": "Profilni saqlab bo‘lmadi. Qayta urinib ko‘ring.",
+    "emailInUse": "Bu email allaqachon ishlatilmoqda.",
+    "selectGender": "Jinsni tanlang",
+    "genderMale": "Erkak",
+    "genderFemale": "Ayol",
+    "genderOther": "Boshqa"
   },
   "form": {
     "courseTitle": "Kurs nomi",
@@ -257,7 +280,9 @@
     "saveGrade": "Bahoni saqlash",
     "user": "Foydalanuvchi",
     "assignTeacher": "Mas'ul o‘qituvchi",
-    "resourceTitle": "Resurs nomi"
+    "resourceTitle": "Resurs nomi",
+    "age": "Yosh",
+    "gender": "Jins"
   },
   "footer": {
     "rights": "© 2026 WD-EDU. Individual ta‘limiy loyiha.",

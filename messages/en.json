@@ -213,8 +213,14 @@
     "newAssignment": "New assignment",
     "allCourses": "Courses",
     "students": "Student results",
+    "teachers": "Teachers",
     "assignments": "Assignments",
-    "noTeachers": "No teacher accounts yet. Create a user with role TEACHER first."
+    "noTeachers": "No teacher accounts yet. Create a user with role TEACHER first.",
+    "gender": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other"
+    }
   },
   "teacher": {
     "title": "Teacher workspace",
@@ -236,7 +242,24 @@
     "progressCol": "Progress",
     "noStudents": "No enrolled students yet.",
     "viewPublicCourse": "Course page",
-    "backToCourse": "Back to course"
+    "backToCourse": "Back to course",
+    "profileTitle": "My profile",
+    "profileSubtitle": "Keep your personal information up to date.",
+    "photoUrl": "Profile image URL",
+    "uploadPhoto": "Upload profile photo",
+    "photoUploadHint": "PNG/JPG up to 2MB.",
+    "photoUploading": "Uploading image…",
+    "photoUploadError": "Could not upload image. Please try again.",
+    "newPassword": "New password",
+    "newPasswordPlaceholder": "Leave empty if you do not want to change it",
+    "saveProfile": "Save profile",
+    "profileSaved": "Profile updated successfully.",
+    "profileSaveError": "Could not save your profile. Please try again.",
+    "emailInUse": "This email is already in use.",
+    "selectGender": "Select gender",
+    "genderMale": "Male",
+    "genderFemale": "Female",
+    "genderOther": "Other"
   },
   "form": {
     "courseTitle": "Course title",
@@ -257,7 +280,9 @@
     "saveGrade": "Save grade",
     "user": "User",
     "assignTeacher": "Lead teacher",
-    "resourceTitle": "Resource title"
+    "resourceTitle": "Resource title",
+    "age": "Age",
+    "gender": "Gender"
   },
   "footer": {
     "rights": "© 2026 WD-EDU. Educational project.",
