@@ -1,28 +1,28 @@
-# WD-EDU — “Veb ilovalarni yaratish” learning platform
+# WD-EDU — “Veb ilovalarni yaratish” o'quv platformasi
 
-Next.js app with **Coursera-style UI**, **Uzbek / English / Russian**, Monaco code labs, and student / instructor roles. Data is stored in **Supabase Postgres** via **`@supabase/supabase-js`** (no Prisma).
+Next.js asosidagi ilova: **Coursera uslubidagi UI**, **O'zbek / Ingliz / Rus** tillari, Monaco code lab'lari va talaba / o'qituvchi rollari bilan. Ma'lumotlar **Supabase Postgres**da **`@supabase/supabase-js`** orqali saqlanadi (Prisma ishlatilmaydi).
 
-## Prerequisites
+## Talablar
 
 - Node.js 20+
-- A [Supabase](https://supabase.com) project
+- [Supabase](https://supabase.com) loyihasi
 
-## Supabase setup
+## Supabase sozlamasi
 
-1. Create a project → **Project Settings → SQL Editor** (or **Database → Migrations**).
-2. Run the SQL in `supabase/migrations/20260331000000_init.sql` once if tables do not exist yet.
-3. Copy **Project Settings → API**:
-   - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
-   - **anon public** → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - **service_role** → `SUPABASE_SERVICE_ROLE_KEY` (server-only; never commit or expose)
+1. Supabase'da loyiha yarating -> **Project Settings -> SQL Editor** (yoki **Database -> Migrations**).
+2. Agar jadvallar hali yo'q bo'lsa, `supabase/migrations/20260331000000_init.sql` ichidagi SQL'ni bir marta ishga tushiring.
+3. **Project Settings -> API** dan quyidagilarni oling:
+   - **Project URL** -> `NEXT_PUBLIC_SUPABASE_URL`
+   - **anon public** -> `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - **service_role** -> `SUPABASE_SERVICE_ROLE_KEY` (faqat server uchun; hech qachon commit qilmang va oshkor qilmang)
 
-## Local setup
+## Lokal ishga tushirish
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` with the values above and a strong `JWT_SECRET` (no quotes in production env UIs).
+`.env` faylini yuqoridagi qiymatlar va kuchli `JWT_SECRET` bilan to'ldiring (production muhitda qo'shtirnoqsiz yozing).
 
 ```bash
 npm install
@@ -30,40 +30,40 @@ npm run db:seed
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+[http://localhost:3000](http://localhost:3000) ni oching.
 
-**Demo logins** (after seed):
+**Demo loginlar** (`seed`dan keyin):
 
-| Role     | Email              | Password   |
-|----------|--------------------|------------|
-| Superadmin | `admin@wdedu.uz`   | `demo1234` |
-| Teacher  | `teacher@wdedu.uz` | `demo1234` |
-| Student  | `student@wdedu.uz` | `demo1234` |
+| Rol | Email | Parol |
+|-----|-------|-------|
+| Superadmin | `admin@wdedu.uz` | `demo1234` |
+| Teacher | `teacher@wdedu.uz` | `demo1234` |
+| Student | `student@wdedu.uz` | `demo1234` |
 
-## Deploy on Vercel
+## Vercel'ga deploy
 
-1. Import the repo; **Root directory** = `web` if the monorepo contains only `web` as the app.
+1. Repo'ni import qiling; agar monorepo bo'lsa va ilova faqat `web`da tursa, **Root directory** = `web`.
 2. **Environment variables** (Production + Preview):
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `JWT_SECRET`
-3. Apply the SQL migration in Supabase if the database is new; optionally run `npm run db:seed` locally with production env to load demo data.
+3. Agar baza yangi bo'lsa, Supabase migration SQL'larini qo'llang; ixtiyoriy ravishda production env bilan lokalda `npm run db:seed` qilib demo ma'lumotlarni yuklang.
 
-## Scripts
+## Skriptlar
 
-| Command           | Purpose                          |
-|-------------------|----------------------------------|
-| `npm run dev`     | Development server               |
-| `npm run build`   | Production build                 |
-| `npm run db:seed` | Seed demo users/courses (local)  |
+| Buyruq | Vazifasi |
+|--------|----------|
+| `npm run dev` | Development server |
+| `npm run build` | Production build |
+| `npm run db:seed` | Demo user/kurslarni seed qilish (lokal) |
 
-## Tech stack
+## Texnologik stack
 
-- Next.js (App Router), TypeScript, Tailwind CSS, next-intl  
-- Supabase (Postgres + REST)  
-- Monaco Editor, jose (JWT), bcryptjs  
+- Next.js (App Router), TypeScript, Tailwind CSS, next-intl
+- Supabase (Postgres + REST)
+- Monaco Editor, jose (JWT), bcryptjs
 
-## License
+## Litsenziya
 
-Educational / individual project use.
+Ta'limiy / individual loyiha uchun foydalanish.
