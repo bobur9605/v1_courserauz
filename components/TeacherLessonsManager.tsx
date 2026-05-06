@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import type { AssignmentEditorLanguage } from "@/lib/assignmentMode";
+import { youtubeWatchUrl } from "@/lib/youtube";
 
 type LessonRow = {
   id: string;
@@ -11,6 +13,7 @@ type LessonRow = {
   order: number;
   isPublished: boolean;
   assignmentId: string | null;
+  youtubeVideoId: string | null;
 };
 
 export function TeacherLessonsManager({
@@ -20,8 +23,12 @@ export function TeacherLessonsManager({
   courseId: string;
   lessons: LessonRow[];
 }) {
+  const t = useTranslations("teacher");
   const initial = useMemo(
-    () => [...lessons].sort((a, b) => a.order - b.order),
+    () =>
+      [...lessons]
+        .sort((a, b) => a.order - b.order)
+        .map((r) => ({ ...r, youtubeVideoId: r.youtubeVideoId ?? null })),
     [lessons],
   );
   const [rows, setRows] = useState<LessonRow[]>(initial);
@@ -32,12 +39,15 @@ export function TeacherLessonsManager({
   const [form, setForm] = useState({
     title: "",
     content: "",
+    youtubeUrl: "",
     assignmentTitle: "",
     assignmentInstructions: "",
     starterCode: "",
     expectedOutput: "",
     language: "javascript" as AssignmentEditorLanguage,
   });
+  const [videoEditId, setVideoEditId] = useState<string | null>(null);
+  const [videoDraft, setVideoDraft] = useState("");
 
   async function persistOrder(next: LessonRow[]) {
     setBusy(true);
@@ -52,7 +62,11 @@ export function TeacherLessonsManager({
       const payload = (await res.json().catch(() => null)) as
         | { error?: string; message?: string }
         | null;
-      setError(payload?.error === "schema_not_ready" ? schemaHelp : "Could not save lesson order.");
+      setError(
+        payload?.error === "schema_not_ready"
+          ? schemaHelp
+          : t("lessonOrderSaveError"),
+      );
     }
   }
 
@@ -65,6 +79,75 @@ export function TeacherLessonsManager({
     next[to] = temp;
     setRows(next);
     void persistOrder(next);
+  }
+
+  function openVideoEdit(lesson: LessonRow) {
+    setVideoEditId(lesson.id);
+    setVideoDraft(
+      lesson.youtubeVideoId ? youtubeWatchUrl(lesson.youtubeVideoId) : "",
+    );
+  }
+
+  function closeVideoEdit() {
+    setVideoEditId(null);
+    setVideoDraft("");
+  }
+
+  async function saveLessonVideo(lessonId: string) {
+    setBusy(true);
+    setError(null);
+    const res = await fetch(`/api/courses/${courseId}/lessons/${lessonId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        youtubeUrl: videoDraft.trim() === "" ? null : videoDraft,
+      }),
+    });
+    setBusy(false);
+    if (!res.ok) {
+      const payload = (await res.json().catch(() => null)) as
+        | { error?: string }
+        | null;
+      setError(
+        payload?.error === "invalid_youtube_url"
+          ? t("youtubeInvalid")
+          : t("lessonVideoSaveError"),
+      );
+      return;
+    }
+    const updated = (await res.json()) as LessonRow;
+    setRows((prev) =>
+      prev.map((r) =>
+        r.id === lessonId
+          ? { ...r, ...updated, youtubeVideoId: updated.youtubeVideoId ?? null }
+          : r,
+      ),
+    );
+    closeVideoEdit();
+  }
+
+  async function clearLessonVideo(lessonId: string) {
+    setBusy(true);
+    setError(null);
+    const res = await fetch(`/api/courses/${courseId}/lessons/${lessonId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ youtubeUrl: null }),
+    });
+    setBusy(false);
+    if (!res.ok) {
+      setError(t("lessonVideoSaveError"));
+      return;
+    }
+    const updated = (await res.json()) as LessonRow;
+    setRows((prev) =>
+      prev.map((r) =>
+        r.id === lessonId
+          ? { ...r, ...updated, youtubeVideoId: updated.youtubeVideoId ?? null }
+          : r,
+      ),
+    );
+    closeVideoEdit();
   }
 
   async function createLesson() {
@@ -80,6 +163,7 @@ export function TeacherLessonsManager({
       body: JSON.stringify({
         title: form.title,
         content: form.content,
+        youtubeUrl: form.youtubeUrl.trim() || undefined,
         assignmentTitle: withAssignment ? form.assignmentTitle : undefined,
         assignmentInstructions: withAssignment
           ? form.assignmentInstructions
@@ -94,14 +178,22 @@ export function TeacherLessonsManager({
       const payload = (await res.json().catch(() => null)) as
         | { error?: string; message?: string }
         | null;
-      setError(payload?.error === "schema_not_ready" ? schemaHelp : "Could not create lesson.");
+      if (payload?.error === "schema_not_ready") setError(schemaHelp);
+      else if (payload?.error === "invalid_youtube_url")
+        setError(t("youtubeInvalid"));
+      else setError(t("lessonCreateError"));
       return;
     }
     const created = (await res.json()) as LessonRow;
-    setRows((prev) => [...prev, created].sort((a, b) => a.order - b.order));
+    setRows((prev) =>
+      [...prev, { ...created, youtubeVideoId: created.youtubeVideoId ?? null }].sort(
+        (a, b) => a.order - b.order,
+      ),
+    );
     setForm({
       title: "",
       content: "",
+      youtubeUrl: "",
       assignmentTitle: "",
       assignmentInstructions: "",
       starterCode: "",
@@ -114,20 +206,28 @@ export function TeacherLessonsManager({
     <div className="space-y-5">
       <div className="rounded-lg border border-[#e0e0e0] p-4">
         <h3 className="text-sm font-bold uppercase tracking-wide text-[#6a6f73]">
-          Create lesson
+          {t("lessonCreateTitle")}
         </h3>
         <div className="mt-3 grid gap-3">
           <input
             className="rounded-md border border-[#d1d5db] px-3 py-2 text-sm"
             value={form.title}
             onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-            placeholder="Lesson title"
+            placeholder={t("lessonTitlePlaceholder")}
           />
           <textarea
             className="min-h-[100px] rounded-md border border-[#d1d5db] px-3 py-2 text-sm"
             value={form.content}
             onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))}
-            placeholder="Written lesson content"
+            placeholder={t("lessonContentPlaceholder")}
+          />
+          <input
+            className="rounded-md border border-[#d1d5db] px-3 py-2 text-sm"
+            value={form.youtubeUrl}
+            onChange={(e) =>
+              setForm((p) => ({ ...p, youtubeUrl: e.target.value }))
+            }
+            placeholder={t("youtubeUrlPlaceholder")}
           />
           <input
             className="rounded-md border border-[#d1d5db] px-3 py-2 text-sm"
@@ -135,7 +235,7 @@ export function TeacherLessonsManager({
             onChange={(e) =>
               setForm((p) => ({ ...p, assignmentTitle: e.target.value }))
             }
-            placeholder="Coding task title (optional)"
+            placeholder={t("lessonCodingTitlePlaceholder")}
           />
           <textarea
             className="min-h-[80px] rounded-md border border-[#d1d5db] px-3 py-2 text-sm"
@@ -143,7 +243,7 @@ export function TeacherLessonsManager({
             onChange={(e) =>
               setForm((p) => ({ ...p, assignmentInstructions: e.target.value }))
             }
-            placeholder="Coding task instructions"
+            placeholder={t("lessonCodingInstructionsPlaceholder")}
           />
           <textarea
             className="min-h-[80px] rounded-md border border-[#d1d5db] px-3 py-2 font-mono text-sm"
@@ -151,10 +251,10 @@ export function TeacherLessonsManager({
             onChange={(e) =>
               setForm((p) => ({ ...p, starterCode: e.target.value }))
             }
-            placeholder="Starter code"
+            placeholder={t("lessonStarterPlaceholder")}
           />
           <label className="grid gap-1 text-sm text-[#1c1d1f]">
-            <span className="font-semibold">Editor language</span>
+            <span className="font-semibold">{t("lessonEditorLanguage")}</span>
             <select
               className="rounded-md border border-[#d1d5db] px-3 py-2 text-sm"
               value={form.language}
@@ -176,7 +276,7 @@ export function TeacherLessonsManager({
             onChange={(e) =>
               setForm((p) => ({ ...p, expectedOutput: e.target.value }))
             }
-            placeholder="Expected output"
+            placeholder={t("lessonExpectedOutputPlaceholder")}
           />
           <button
             type="button"
@@ -184,7 +284,7 @@ export function TeacherLessonsManager({
             onClick={() => void createLesson()}
             className="w-fit rounded-md bg-[#0056d2] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00419e] disabled:opacity-60"
           >
-            Add lesson
+            {t("lessonAddButton")}
           </button>
         </div>
       </div>
@@ -193,17 +293,67 @@ export function TeacherLessonsManager({
         {rows.map((lesson, i) => (
           <div
             key={lesson.id}
-            className="flex flex-wrap items-center justify-between gap-3 px-2 py-3"
+            className="flex flex-wrap items-start justify-between gap-3 px-2 py-3"
           >
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="font-semibold text-[#1c1d1f]">
                 {i + 1}. {lesson.title}
               </p>
               <p className="text-xs text-[#6a6f73]">
-                {lesson.assignmentId ? "Includes coding task" : "Reading-only"}
+                {lesson.assignmentId ? t("lessonRowCoding") : t("lessonRowReading")}
+                {" · "}
+                {lesson.youtubeVideoId
+                  ? t("lessonRowVideoYes")
+                  : t("lessonRowVideoNo")}
               </p>
+              {videoEditId === lesson.id ? (
+                <div className="mt-3 grid max-w-lg gap-2">
+                  <input
+                    className="rounded-md border border-[#d1d5db] px-3 py-2 text-sm"
+                    value={videoDraft}
+                    onChange={(e) => setVideoDraft(e.target.value)}
+                    placeholder={t("youtubeUrlPlaceholder")}
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void saveLessonVideo(lesson.id)}
+                      className="rounded-md bg-[#0056d2] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#00419e] disabled:opacity-60"
+                    >
+                      {t("videoSave")}
+                    </button>
+                    {lesson.youtubeVideoId ? (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void clearLessonVideo(lesson.id)}
+                        className="rounded-md border border-[#e0e0e0] px-3 py-1.5 text-sm font-semibold text-[#6a6f73] hover:bg-[#f5f7fa] disabled:opacity-60"
+                      >
+                        {t("videoRemove")}
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={closeVideoEdit}
+                      className="text-sm font-semibold text-[#0056d2] hover:underline disabled:opacity-60"
+                    >
+                      {t("videoCancel")}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => openVideoEdit(lesson)}
+                className="text-sm font-semibold text-[#0056d2] hover:underline disabled:opacity-60"
+              >
+                {lesson.youtubeVideoId ? t("videoEdit") : t("videoAttach")}
+              </button>
               <button
                 type="button"
                 disabled={busy || i === 0}
@@ -224,7 +374,7 @@ export function TeacherLessonsManager({
                 href={`/courses/${courseId}/lessons/${lesson.id}`}
                 className="text-sm font-semibold text-[#0056d2] hover:underline"
               >
-                Preview
+                {t("lessonPreview")}
               </Link>
             </div>
           </div>

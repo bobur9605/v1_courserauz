@@ -38,7 +38,7 @@ export default async function TeacherCoursePage(props: Props) {
 
   const { data: lessonsRaw, error: lessonsError } = await supabase
     .from("Lesson")
-    .select("id, title, content, order, isPublished, assignmentId")
+    .select("id, title, content, order, isPublished, assignmentId, youtubeVideoId")
     .eq("courseId", courseId)
     .order("order", { ascending: true });
   const lessons = lessonsRaw ?? [];

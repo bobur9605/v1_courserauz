@@ -8,12 +8,14 @@ import {
   isSchemaNotReadyError,
   schemaNotReadyResponse,
 } from "@/lib/supabase/schemaErrors";
+import { parseYoutubeVideoId } from "@/lib/youtube";
 
 type Ctx = { params: Promise<{ id: string }> };
 
 const createSchema = z.object({
   title: z.string().min(2),
   content: z.string().optional(),
+  youtubeUrl: z.string().optional(),
   assignmentTitle: z.string().min(2).optional(),
   assignmentInstructions: z.string().optional(),
   starterCode: z.string().optional(),
@@ -45,7 +47,7 @@ export async function GET(_req: Request, ctx: Ctx) {
 
   const { data: lessons, error: lessonsError } = await supabase
     .from("Lesson")
-    .select("id, title, content, order, isPublished, assignmentId")
+    .select("id, title, content, order, isPublished, assignmentId, youtubeVideoId")
     .eq("courseId", courseId)
     .order("order", { ascending: true });
   if (isSchemaNotReadyError(lessonsError)) {
@@ -92,6 +94,16 @@ export async function POST(req: Request, ctx: Ctx) {
     .limit(1);
   const nextOrder = (lastRows?.[0]?.order ?? -1) + 1;
 
+  let youtubeVideoId: string | null = null;
+  const urlCandidate = body.youtubeUrl?.trim() ?? "";
+  if (urlCandidate) {
+    const id = parseYoutubeVideoId(urlCandidate);
+    if (!id) {
+      return NextResponse.json({ error: "invalid_youtube_url" }, { status: 400 });
+    }
+    youtubeVideoId = id;
+  }
+
   let assignmentId: string | null = null;
   if (
     body.assignmentTitle &&
@@ -128,8 +140,9 @@ export async function POST(req: Request, ctx: Ctx) {
       order: nextOrder,
       isPublished: true,
       assignmentId,
+      youtubeVideoId,
     })
-    .select("id, title, content, order, isPublished, assignmentId")
+    .select("id, title, content, order, isPublished, assignmentId, youtubeVideoId")
     .single();
   if (lessonError || !lesson) {
     if (isSchemaNotReadyError(lessonError)) {

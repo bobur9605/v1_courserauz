@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth";
 import { canManageCourseContent } from "@/lib/coursePermissions";
 import { bypassesLessonSequence } from "@/lib/lessonGating";
 import { studentMayAccessLessonOrder } from "@/lib/lessonGatingServer";
+import { parseYoutubeVideoId } from "@/lib/youtube";
 
 type Ctx = { params: Promise<{ id: string; lessonId: string }> };
 
@@ -12,6 +13,7 @@ const patchSchema = z.object({
   title: z.string().min(2).optional(),
   content: z.string().optional(),
   isPublished: z.boolean().optional(),
+  youtubeUrl: z.union([z.string(), z.null()]).optional(),
 });
 
 export async function GET(_req: Request, ctx: Ctx) {
@@ -24,7 +26,7 @@ export async function GET(_req: Request, ctx: Ctx) {
 
   const { data: lesson } = await supabase
     .from("Lesson")
-    .select("id, courseId, title, content, order, isPublished, assignmentId")
+    .select("id, courseId, title, content, order, isPublished, assignmentId, youtubeVideoId")
     .eq("id", lessonId)
     .eq("courseId", courseId)
     .maybeSingle();
@@ -121,13 +123,27 @@ export async function PATCH(req: Request, ctx: Ctx) {
   if (body.title !== undefined) patch.title = body.title;
   if (body.content !== undefined) patch.content = body.content;
   if (body.isPublished !== undefined) patch.isPublished = body.isPublished;
+  if (body.youtubeUrl !== undefined) {
+    if (
+      body.youtubeUrl === null ||
+      (typeof body.youtubeUrl === "string" && body.youtubeUrl.trim() === "")
+    ) {
+      patch.youtubeVideoId = null;
+    } else {
+      const id = parseYoutubeVideoId(body.youtubeUrl);
+      if (!id) {
+        return NextResponse.json({ error: "invalid_youtube_url" }, { status: 400 });
+      }
+      patch.youtubeVideoId = id;
+    }
+  }
 
   const { data: updated, error } = await supabase
     .from("Lesson")
     .update(patch)
     .eq("id", lessonId)
     .eq("courseId", courseId)
-    .select("id, title, content, order, isPublished, assignmentId")
+    .select("id, title, content, order, isPublished, assignmentId, youtubeVideoId")
     .single();
   if (error || !updated) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });

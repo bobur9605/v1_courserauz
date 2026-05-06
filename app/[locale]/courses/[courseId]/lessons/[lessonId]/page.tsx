@@ -21,7 +21,7 @@ export default async function LessonPage(props: Props) {
 
   const { data: lesson, error } = await supabase
     .from("Lesson")
-    .select("id, title, content, order, assignmentId, courseId")
+    .select("id, title, content, order, assignmentId, courseId, youtubeVideoId")
     .eq("id", lessonId)
     .eq("courseId", courseId)
     .maybeSingle();
@@ -91,11 +91,30 @@ export default async function LessonPage(props: Props) {
 
       <section className="rounded-xl border border-[#e0e0e0] bg-white p-6 shadow-sm">
         <h2 className="text-sm font-bold uppercase tracking-wide text-[#6a6f73]">
-          Lesson material
+          {t("lessonMaterial")}
         </h2>
-        <p className="mt-3 whitespace-pre-wrap text-[#1c1d1f]">
-          {lesson.content || "No material yet."}
-        </p>
+        {lesson.youtubeVideoId ? (
+          <div className="mt-4 aspect-video w-full overflow-hidden rounded-lg border border-[#e0e0e0] bg-black">
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${lesson.youtubeVideoId}?rel=0`}
+              title={`${lesson.title} — ${t("lessonVideo")}`}
+              className="h-full w-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          </div>
+        ) : null}
+        {lesson.content?.trim() ? (
+          <p
+            className={`whitespace-pre-wrap text-[#1c1d1f] ${
+              lesson.youtubeVideoId ? "mt-4" : "mt-3"
+            }`}
+          >
+            {lesson.content}
+          </p>
+        ) : lesson.youtubeVideoId ? null : (
+          <p className="mt-3 text-[#1c1d1f]">{t("noLessonMaterial")}</p>
+        )}
       </section>
 
       {assignment && (
