@@ -157,7 +157,8 @@ export function AssignmentWorkspace({
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-      <section className="overflow-hidden rounded-xl border border-[#dfe3e8] bg-white shadow-sm">
+      <section className="flex flex-col gap-3">
+        <div className="overflow-hidden rounded-xl border border-[#dfe3e8] bg-white shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eceff3] bg-[#f9fafb] px-4 py-2.5">
           <div className="min-w-0">
             <h2 className="text-base font-bold text-[#1c1d1f]">{t("editor")}</h2>
@@ -180,8 +181,9 @@ export function AssignmentWorkspace({
             path={fileName}
           />
         </div>
+        </div>
 
-        <div className="flex flex-wrap items-center gap-3 border-t border-[#eceff3] bg-[#fbfcfe] px-4 py-3">
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[#dfe3e8] bg-[#fbfcfe] px-4 py-3 shadow-sm">
           <button
             type="button"
             onClick={runLocal}
