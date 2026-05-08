@@ -1,9 +1,14 @@
-import nextVitals from "eslint-config-next/core-web-vitals.js";
-import nextTs from "eslint-config-next/typescript.js";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+
+const asConfigArray = (config) => {
+  const normalized = config?.default ?? config;
+  return Array.isArray(normalized) ? normalized : [normalized];
+};
 
 export default [
-  ...nextVitals,
-  ...nextTs,
+  ...asConfigArray(nextVitals),
+  ...asConfigArray(nextTs),
   {
     ignores: [
       ".next/**",
