@@ -61,6 +61,12 @@ export function AssignmentWorkspace({
   const [lastPass, setLastPass] = useState<boolean | null>(
     existingPassed ?? null,
   );
+  const [latestFeedback, setLatestFeedback] = useState<string | null>(
+    existingFeedback ?? null,
+  );
+  const [latestScore, setLatestScore] = useState<number | null>(
+    existingScore ?? null,
+  );
 
   const options = useMemo(
     () => ({
@@ -139,10 +145,9 @@ export function AssignmentWorkspace({
       }
       setOutput(data.stdout ?? "");
       setLastPass(!!data.passed);
-      setMsg(
-        t("submitted", { score: String(data.score ?? 0) }) +
-          (data.feedback ? `\n${data.feedback}` : ""),
-      );
+      setLatestFeedback(data.feedback ?? null);
+      setLatestScore(data.score ?? null);
+      setMsg(t("submitted", { score: String(data.score ?? 0) }));
       router.refresh();
     } catch {
       setMsg(t("submitError"));
@@ -234,12 +239,12 @@ export function AssignmentWorkspace({
           </div>
         )}
 
-        {(existingFeedback || existingScore !== undefined) && (
+        {(latestFeedback !== null || latestScore !== null) && (
           <div className="rounded-xl border border-[#dfe3e8] bg-white p-4 text-sm shadow-sm">
             <p className="font-semibold text-[#1c1d1f]">{t("teacherFeedback")}</p>
             <p className="mt-1 whitespace-pre-wrap text-[#6a6f73]">
-              {existingFeedback || "—"}
-              {existingScore != null ? ` (${existingScore})` : ""}
+              {latestFeedback || "—"}
+              {latestScore != null ? ` (${latestScore})` : ""}
             </p>
           </div>
         )}
