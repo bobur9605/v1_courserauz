@@ -94,12 +94,14 @@ export default async function LessonPage(props: Props) {
           {t("lessonMaterial")}
         </h2>
         {lesson.youtubeVideoId ? (
-          <div className="mt-4 aspect-video w-full overflow-hidden rounded-lg border border-[#e0e0e0] bg-black">
+          <div className="mx-auto mt-4 w-full max-w-4xl overflow-hidden rounded-xl border border-[#dfe3eb] bg-black shadow-sm">
             <iframe
-              src={`https://www.youtube-nocookie.com/embed/${lesson.youtubeVideoId}?rel=0`}
+              src={`https://www.youtube-nocookie.com/embed/${lesson.youtubeVideoId}?rel=0&modestbranding=1&playsinline=1&iv_load_policy=3`}
               title={`${lesson.title} — ${t("lessonVideo")}`}
-              className="h-full w-full"
+              className="aspect-video w-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              loading="lazy"
+              referrerPolicy="strict-origin-when-cross-origin"
               allowFullScreen
             />
           </div>
