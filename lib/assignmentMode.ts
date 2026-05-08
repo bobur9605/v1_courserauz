@@ -28,12 +28,12 @@ export function inferAssignmentLanguageFromContent(
   starterCode: string,
   expectedOutput = "",
 ): AssignmentEditorLanguage | null {
-  if (matchesAnyPattern(starterCode, LEGACY_JS_TASK_PATTERNS)) {
-    return "javascript";
-  }
   const combined = `${starterCode}\n${expectedOutput}`;
   if (matchesAnyPattern(combined, HTML_TASK_PATTERNS)) return "html";
   if (matchesAnyPattern(combined, CSS_TASK_PATTERNS)) return "css";
+  if (matchesAnyPattern(starterCode, LEGACY_JS_TASK_PATTERNS)) {
+    return "javascript";
+  }
   return null;
 }
 
@@ -51,13 +51,14 @@ export function usesJavaScriptRunner(
   starterCode: string,
   expectedOutput = "",
 ) {
+  if (language === "html" || language === "css") return false;
+  if (language === "javascript") return true;
   const inferredLanguage = inferAssignmentLanguageFromContent(
     starterCode,
     expectedOutput,
   );
   if (inferredLanguage === "html" || inferredLanguage === "css") return false;
-  if (!language || language === "javascript") return true;
-  return LEGACY_JS_TASK_PATTERNS.some((pattern) => pattern.test(starterCode));
+  return true;
 }
 
 export function resolveAssignmentEditorLanguage(
@@ -65,16 +66,14 @@ export function resolveAssignmentEditorLanguage(
   starterCode: string,
   expectedOutput = "",
 ): AssignmentEditorLanguage {
+  if (language === "html" || language === "css") return language;
+  if (language === "javascript") return "javascript";
   const inferredLanguage = inferAssignmentLanguageFromContent(
     starterCode,
     expectedOutput,
   );
-  if (inferredLanguage === "html" || inferredLanguage === "css") {
-    return inferredLanguage;
-  }
-  return usesJavaScriptRunner(language, starterCode, expectedOutput)
-    ? "javascript"
-    : (language ?? inferredLanguage ?? "javascript");
+  if (inferredLanguage) return inferredLanguage;
+  return "javascript";
 }
 
 export function assignmentEditorFileName(language: AssignmentEditorLanguage) {
