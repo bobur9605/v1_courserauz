@@ -60,7 +60,7 @@ export default async function LessonPage(props: Props) {
   const { data: result } = session && assignment
     ? await supabase
         .from("Result")
-        .select("submittedCode, score, passed, feedback")
+        .select("submittedCode, stdout, score, passed, feedback")
         .eq("studentId", session.sub)
         .eq("assignmentId", assignment.id)
         .maybeSingle()
@@ -131,6 +131,7 @@ export default async function LessonPage(props: Props) {
               starterCode={assignment.starterCode}
               expectedOutput={assignment.expectedOutput}
               initialCode={result?.submittedCode}
+              initialStdout={result?.stdout}
               existingScore={result?.score}
               existingFeedback={result?.feedback}
               editorLanguage={resolveAssignmentEditorLanguage(

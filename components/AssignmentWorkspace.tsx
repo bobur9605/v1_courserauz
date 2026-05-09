@@ -30,6 +30,8 @@ type Props = {
   starterCode: string;
   expectedOutput: string;
   initialCode?: string;
+  /** Last saved program output (from Result.stdout) so Natija matches the last grade. */
+  initialStdout?: string | null;
   existingScore?: number | null;
   existingFeedback?: string | null;
   editorLanguage?: AssignmentEditorLanguage;
@@ -40,6 +42,7 @@ export function AssignmentWorkspace({
   starterCode,
   expectedOutput,
   initialCode,
+  initialStdout,
   existingScore,
   existingFeedback,
   editorLanguage = "javascript",
@@ -53,7 +56,9 @@ export function AssignmentWorkspace({
       ? t("consoleHint")
       : t("markupHint");
   const [code, setCode] = useState(initialCode ?? starterCode);
-  const [output, setOutput] = useState("");
+  const [output, setOutput] = useState(
+    () => normalizeOutput(initialStdout ?? ""),
+  );
   const [busy, setBusy] = useState(false);
   const [latestFeedback, setLatestFeedback] = useState<string | null>(
     existingFeedback ?? null,
@@ -171,7 +176,10 @@ export function AssignmentWorkspace({
     <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
       {actionToast ? (
         <div
-          className="pointer-events-none fixed top-6 right-4 z-[100] flex max-w-[min(100vw-2rem,22rem)] justify-end sm:right-6"
+          className="pointer-events-none fixed right-4 z-[60] flex max-w-[min(100vw-2rem,22rem)] justify-end sm:right-6"
+          style={{
+            top: "calc(var(--site-header-offset, 5.5rem) + 0.5rem)",
+          }}
           role="status"
           aria-live="polite"
         >
@@ -254,8 +262,11 @@ export function AssignmentWorkspace({
           <div className="rounded-xl border border-[#dfe3e8] bg-white p-4 text-sm shadow-sm">
             <p className="font-semibold text-[#1c1d1f]">{t("teacherFeedback")}</p>
             <p className="mt-1 whitespace-pre-wrap text-[#6a6f73]">
-              {latestFeedback || "—"}
-              {latestScore != null ? ` (${latestScore})` : ""}
+              {latestFeedback?.trim()
+                ? `${latestFeedback}${latestScore != null ? ` (${latestScore})` : ""}`
+                : latestScore != null
+                  ? t("submitted", { score: String(latestScore) })
+                  : "—"}
             </p>
           </div>
         )}

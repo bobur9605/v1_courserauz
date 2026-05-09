@@ -8,6 +8,14 @@
   --card: #ffffff;
   --border: #e0e0e0;
   --muted: #6a6f73;
+  /* ResponsiveSiteHeader: mobile stack (brand + search) vs single-row desktop */
+  --site-header-offset: 10rem;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --site-header-offset: 5.5rem;
+  }
 }
 
 @theme inline {

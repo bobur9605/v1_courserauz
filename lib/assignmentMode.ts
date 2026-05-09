@@ -24,6 +24,11 @@ function matchesAnyPattern(text: string, patterns: readonly RegExp[]) {
   return patterns.some((pattern) => pattern.test(text));
 }
 
+/** True when the stored starter is a console/JS exercise (even on “HTML” courses). */
+export function starterCodeIsJavaScriptTask(starterCode: string) {
+  return matchesAnyPattern(starterCode, LEGACY_JS_TASK_PATTERNS);
+}
+
 export function inferAssignmentLanguageFromContent(
   starterCode: string,
   expectedOutput = "",
@@ -54,6 +59,9 @@ export function usesJavaScriptRunner(
   starterCode: string,
   expectedOutput = "",
 ) {
+  // DB language can be "html" because expected output looks like markup, while
+  // the lesson is still a console.log JavaScript task — always execute JS in that case.
+  if (starterCodeIsJavaScriptTask(starterCode)) return true;
   if (language === "html" || language === "css") return false;
   if (language === "javascript") return true;
   const inferredLanguage = inferAssignmentLanguageFromContent(
@@ -69,6 +77,7 @@ export function resolveAssignmentEditorLanguage(
   starterCode: string,
   expectedOutput = "",
 ): AssignmentEditorLanguage {
+  if (starterCodeIsJavaScriptTask(starterCode)) return "javascript";
   if (language === "html" || language === "css") return language;
   if (language === "javascript") return "javascript";
   const inferredLanguage = inferAssignmentLanguageFromContent(
