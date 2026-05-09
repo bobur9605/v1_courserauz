@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "@/i18n/routing";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { normalizeOutput } from "@/lib/normalizeOutput";
+import { normalizeMarkupOutput, normalizeOutput } from "@/lib/normalizeOutput";
 import {
   assignmentEditorFileName,
   type AssignmentEditorLanguage,
@@ -94,7 +94,8 @@ export function AssignmentWorkspace({
     if (editorLanguage !== "javascript") {
       const text = normalizeOutput(code);
       setOutput(text);
-      const pass = text === normalizeOutput(expectedOutput);
+      const pass =
+        normalizeMarkupOutput(code) === normalizeOutput(expectedOutput);
       setActionToast({
         variant: pass ? "success" : "error",
         message: pass ? t("pass") : t("fail"),

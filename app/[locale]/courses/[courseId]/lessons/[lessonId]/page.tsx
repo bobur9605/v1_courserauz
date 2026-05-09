@@ -138,6 +138,7 @@ export default async function LessonPage(props: Props) {
                 assignment.language,
                 assignment.starterCode,
                 assignment.expectedOutput,
+                courseTitle,
               )}
             />
           ) : (

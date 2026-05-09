@@ -151,15 +151,14 @@ async function main() {
   if (cErr) throw cErr;
 
   const assignments = [
-    // HTML track (simulated in JS console tasks)
+    // HTML track — markup in index.html (course title forces HTML editor)
     {
       id: newId(),
       courseId: htmlId,
       title: "HTML Document Skeleton",
       instructions:
-        "Create a string that represents a minimal HTML skeleton and print ONLY the opening tag line: <html lang=\"en\">",
-      starterCode:
-        "const htmlDoc = '<!doctype html>\\n<html lang=\"en\">\\n<head>\\n  <meta charset=\"UTF-8\" />\\n</head>\\n<body></body>\\n</html>';\n// Print only the second line\n",
+        "In index.html, the file must contain only this single line (no doctype, no other tags): <html lang=\"en\">",
+      starterCode: '<html lang="en">\n',
       expectedOutput: '<html lang="en">',
       order: 0,
     },
@@ -168,9 +167,9 @@ async function main() {
       courseId: htmlId,
       title: "Semantic Tags Order",
       instructions:
-        "Use the array below and print semantic tags joined by ' > ' in the same order.",
+        "In index.html, type exactly one line: the semantic tags header, main, section, article, footer joined by ' > ' in that order.",
       starterCode:
-        "const tags = ['header', 'main', 'section', 'article', 'footer'];\n// Print: header > main > section > article > footer\n",
+        "<!-- Tags: header, main, section, article, footer — one line, separated by \" > \" -->\n",
       expectedOutput: "header > main > section > article > footer",
       order: 1,
     },
@@ -179,9 +178,9 @@ async function main() {
       courseId: htmlId,
       title: "Form Fields Count",
       instructions:
-        "Given form field types, print how many fields exist.",
+        "In index.html, the file must contain only one character: the digit for how many field types are listed in the comment below.",
       starterCode:
-        "const fields = ['text', 'email', 'password', 'checkbox', 'submit'];\n// Print the number of fields\n",
+        "<!-- text, email, password, checkbox, submit -->\n",
       expectedOutput: "5",
       order: 2,
     },
@@ -190,9 +189,8 @@ async function main() {
       courseId: htmlId,
       title: "Accessible Image Snippet",
       instructions:
-        "Build an image tag using src='hero.png' and alt='Hero banner'. Print it exactly.",
-      starterCode:
-        "const src = 'hero.png';\nconst alt = 'Hero banner';\n// Build and print: <img src=\"hero.png\" alt=\"Hero banner\" />\n",
+        "In index.html, add one line: a single <img /> with src=\"hero.png\" and alt=\"Hero banner\" exactly as shown in the expected output.",
+      starterCode: "<!-- src: hero.png — alt: Hero banner -->\n",
       expectedOutput: '<img src="hero.png" alt="Hero banner" />',
       order: 3,
     },

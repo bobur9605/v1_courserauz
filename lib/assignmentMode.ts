@@ -58,28 +58,40 @@ export function usesJavaScriptRunner(
   language: AssignmentEditorLanguage | null | undefined,
   starterCode: string,
   expectedOutput = "",
+  courseTitle = "",
 ) {
-  // DB language can be "html" because expected output looks like markup, while
-  // the lesson is still a console.log JavaScript task — always execute JS in that case.
-  if (starterCodeIsJavaScriptTask(starterCode)) return true;
-  if (language === "html" || language === "css") return false;
-  if (language === "javascript") return true;
-  const inferredLanguage = inferAssignmentLanguageFromContent(
-    starterCode,
-    expectedOutput,
+  return (
+    resolveAssignmentEditorLanguage(
+      language,
+      starterCode,
+      expectedOutput,
+      courseTitle,
+    ) === "javascript"
   );
-  if (inferredLanguage === "html" || inferredLanguage === "css") return false;
-  return true;
 }
 
+/**
+ * Resolves Monaco language + runner mode. HTML-titled courses use index.html so
+ * learners write markup; explicit Assignment.language still overrides when set.
+ */
 export function resolveAssignmentEditorLanguage(
   language: AssignmentEditorLanguage | null | undefined,
   starterCode: string,
   expectedOutput = "",
+  courseTitle = "",
 ): AssignmentEditorLanguage {
-  if (starterCodeIsJavaScriptTask(starterCode)) return "javascript";
   if (language === "html" || language === "css") return language;
   if (language === "javascript") return "javascript";
+
+  if (
+    courseTitle.trim() &&
+    inferAssignmentLanguageFromCourseTitle(courseTitle) === "html"
+  ) {
+    return "html";
+  }
+
+  if (starterCodeIsJavaScriptTask(starterCode)) return "javascript";
+
   const inferredLanguage = inferAssignmentLanguageFromContent(
     starterCode,
     expectedOutput,

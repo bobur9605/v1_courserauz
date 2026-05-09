@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
-import { normalizeOutput, runStudentCode } from "@/lib/runner";
+import { normalizeMarkupOutput, normalizeOutput } from "@/lib/normalizeOutput";
+import { runStudentCode } from "@/lib/runner";
 import { newId } from "@/lib/ids";
 import { bypassesLessonSequence } from "@/lib/lessonGating";
 import { studentMayAccessLessonOrder } from "@/lib/lessonGatingServer";
@@ -48,6 +49,12 @@ export async function POST(req: Request) {
     if (aErr || !assignment) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
+    const { data: courseRow } = await supabase
+      .from("Course")
+      .select("title")
+      .eq("id", assignment.courseId)
+      .maybeSingle();
+    const courseTitle = courseRow?.title ?? "";
     const { data: lesson } = assignment.lessonId
       ? await supabase
           .from("Lesson")
@@ -70,6 +77,7 @@ export async function POST(req: Request) {
       assignment.language,
       assignment.starterCode,
       assignment.expectedOutput,
+      courseTitle,
     );
 
     if (session.role === "STUDENT") {
@@ -90,14 +98,20 @@ export async function POST(req: Request) {
         : { ok: true, stdout: normalizeOutput(body.code), error: undefined };
     const { stdout, ok, error } = execution;
     const expected = normalizeOutput(assignment.expectedOutput);
-    const got = normalizeOutput(stdout);
+    const got = runAsJavaScript
+      ? normalizeOutput(stdout)
+      : normalizeMarkupOutput(stdout);
     const passed = ok && got === expected;
     const score = passed ? 100 : ok ? 40 : 0;
     const feedback = passed
       ? null
       : error
         ? runtimeFeedback(locale, error)
-        : mismatchFeedback(locale, expected, got);
+        : mismatchFeedback(
+            locale,
+            expected,
+            runAsJavaScript ? got : normalizeOutput(stdout),
+          );
     const now = new Date().toISOString();
 
     const { data: prior } = await supabase

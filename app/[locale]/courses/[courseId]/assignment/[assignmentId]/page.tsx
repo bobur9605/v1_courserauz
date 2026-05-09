@@ -59,6 +59,7 @@ export default async function AssignmentPage(props: Props) {
     row.language,
     row.starterCode,
     row.expectedOutput,
+    courseTitle,
   );
 
   const { data: result } = session
