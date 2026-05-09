@@ -31,7 +31,6 @@ type Props = {
   expectedOutput: string;
   initialCode?: string;
   existingScore?: number | null;
-  existingPassed?: boolean;
   existingFeedback?: string | null;
   editorLanguage?: AssignmentEditorLanguage;
 };
@@ -42,7 +41,6 @@ export function AssignmentWorkspace({
   expectedOutput,
   initialCode,
   existingScore,
-  existingPassed,
   existingFeedback,
   editorLanguage = "javascript",
 }: Props) {
@@ -56,28 +54,24 @@ export function AssignmentWorkspace({
       : t("markupHint");
   const [code, setCode] = useState(initialCode ?? starterCode);
   const [output, setOutput] = useState("");
-  const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [lastPass, setLastPass] = useState<boolean | null>(
-    existingPassed ?? null,
-  );
   const [latestFeedback, setLatestFeedback] = useState<string | null>(
     existingFeedback ?? null,
   );
   const [latestScore, setLatestScore] = useState<number | null>(
     existingScore ?? null,
   );
-  /** Transient toast after "Run" (success / failure / runtime error). */
-  const [runToast, setRunToast] = useState<{
+  /** Transient toast after Run or Submit (success / failure / errors). */
+  const [actionToast, setActionToast] = useState<{
     variant: "success" | "error";
     message: string;
   } | null>(null);
 
   useEffect(() => {
-    if (!runToast) return;
-    const id = window.setTimeout(() => setRunToast(null), 4000);
+    if (!actionToast) return;
+    const id = window.setTimeout(() => setActionToast(null), 4000);
     return () => window.clearTimeout(id);
-  }, [runToast]);
+  }, [actionToast]);
 
   const options = useMemo(
     () => ({
@@ -92,13 +86,11 @@ export function AssignmentWorkspace({
   );
 
   const runLocal = useCallback(() => {
-    setMsg(null);
     if (editorLanguage !== "javascript") {
       const text = normalizeOutput(code);
       setOutput(text);
       const pass = text === normalizeOutput(expectedOutput);
-      setLastPass(pass);
-      setRunToast({
+      setActionToast({
         variant: pass ? "success" : "error",
         message: pass ? t("pass") : t("fail"),
       });
@@ -121,23 +113,19 @@ export function AssignmentWorkspace({
       setOutput(text);
       const pass =
         normalizeOutput(text) === normalizeOutput(expectedOutput);
-      setLastPass(pass);
-      setRunToast({
+      setActionToast({
         variant: pass ? "success" : "error",
         message: pass ? t("pass") : t("fail"),
       });
     } catch (e: unknown) {
       const err = e instanceof Error ? e.message : String(e);
       setOutput(logs.join("\n"));
-      setMsg(err);
-      setLastPass(false);
-      setRunToast({ variant: "error", message: err });
+      setActionToast({ variant: "error", message: err });
     }
   }, [code, editorLanguage, expectedOutput, t]);
 
   const submit = useCallback(async () => {
     setBusy(true);
-    setMsg(null);
     try {
       const res = await fetch("/api/submit", {
         method: "POST",
@@ -152,48 +140,49 @@ export function AssignmentWorkspace({
         feedback?: string | null;
       };
       if (!res.ok) {
-        if (data.error === "unauthorized") {
-          setMsg(t("needLogin"));
-        } else if (data.error === "forbidden") {
-          setMsg(t("needEnroll"));
-        } else if (data.error === "not_found") {
-          setMsg(t("notFound"));
-        } else if (data.error === "sequence_locked") {
-          setMsg(t("sequenceLocked"));
-        } else {
-          setMsg(t("submitError"));
-        }
+        let message = t("submitError");
+        if (data.error === "unauthorized") message = t("needLogin");
+        else if (data.error === "forbidden") message = t("needEnroll");
+        else if (data.error === "not_found") message = t("notFound");
+        else if (data.error === "sequence_locked") message = t("sequenceLocked");
+        setActionToast({ variant: "error", message });
         setBusy(false);
         return;
       }
       setOutput(data.stdout ?? "");
-      setLastPass(!!data.passed);
       setLatestFeedback(data.feedback ?? null);
       setLatestScore(data.score ?? null);
-      setMsg(t("submitted", { score: String(data.score ?? 0) }));
+      if (data.passed) {
+        setActionToast({
+          variant: "success",
+          message: t("submitted", { score: String(data.score ?? 0) }),
+        });
+      } else {
+        setActionToast({ variant: "error", message: t("fail") });
+      }
       router.refresh();
     } catch {
-      setMsg(t("submitError"));
+      setActionToast({ variant: "error", message: t("submitError") });
     }
     setBusy(false);
   }, [assignmentId, code, locale, router, t]);
 
   return (
     <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-      {runToast ? (
+      {actionToast ? (
         <div
-          className="pointer-events-none fixed bottom-6 left-1/2 z-[100] flex max-w-[min(100vw-2rem,28rem)] -translate-x-1/2 justify-center px-4"
+          className="pointer-events-none fixed top-6 right-4 z-[100] flex max-w-[min(100vw-2rem,22rem)] justify-end sm:right-6"
           role="status"
           aria-live="polite"
         >
           <div
             className={`pointer-events-auto rounded-lg border px-4 py-3 text-sm font-semibold shadow-lg ${
-              runToast.variant === "success"
+              actionToast.variant === "success"
                 ? "border-emerald-200 bg-emerald-50 text-emerald-900"
                 : "border-amber-200 bg-amber-50 text-amber-950"
             }`}
           >
-            {runToast.message}
+            {actionToast.message}
           </div>
         </div>
       ) : null}
@@ -239,14 +228,6 @@ export function AssignmentWorkspace({
           >
             {t("submit")}
           </button>
-          {msg && (
-            <p
-              className="w-full whitespace-pre-wrap text-left text-sm font-medium text-[#0056d2] sm:ml-auto sm:max-w-[55%] sm:text-right"
-              role="status"
-            >
-              {msg}
-            </p>
-          )}
         </div>
       </section>
 
@@ -268,18 +249,6 @@ export function AssignmentWorkspace({
             {output || "—"}
           </pre>
         </div>
-
-        {lastPass !== null && (
-          <div
-            className={`rounded-lg border px-4 py-3 text-sm font-semibold ${
-              lastPass
-                ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-                : "border-amber-200 bg-amber-50 text-amber-900"
-            }`}
-          >
-            {lastPass ? t("pass") : t("fail")}
-          </div>
-        )}
 
         {(latestFeedback !== null || latestScore !== null) && (
           <div className="rounded-xl border border-[#dfe3e8] bg-white p-4 text-sm shadow-sm">

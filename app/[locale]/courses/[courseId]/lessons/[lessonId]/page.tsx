@@ -132,7 +132,6 @@ export default async function LessonPage(props: Props) {
               expectedOutput={assignment.expectedOutput}
               initialCode={result?.submittedCode}
               existingScore={result?.score}
-              existingPassed={result?.passed}
               existingFeedback={result?.feedback}
               editorLanguage={resolveAssignmentEditorLanguage(
                 assignment.language,

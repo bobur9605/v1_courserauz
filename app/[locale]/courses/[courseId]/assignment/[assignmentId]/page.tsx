@@ -101,7 +101,6 @@ export default async function AssignmentPage(props: Props) {
           expectedOutput={row.expectedOutput}
           initialCode={result?.submittedCode}
           existingScore={result?.score}
-          existingPassed={result?.passed}
           existingFeedback={result?.feedback}
           editorLanguage={editorLanguage}
         />
