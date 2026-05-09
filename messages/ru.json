@@ -322,7 +322,19 @@
     "youtubeInvalid": "Укажите действительную ссылку YouTube или ID видео.",
     "lessonOrderSaveError": "Не удалось сохранить порядок уроков.",
     "lessonCreateError": "Не удалось создать урок.",
-    "lessonVideoSaveError": "Не удалось сохранить видео."
+    "lessonVideoSaveError": "Не удалось сохранить видео.",
+    "lessonEditTitle": "Редактировать урок",
+    "lessonEditButton": "Изменить",
+    "lessonSaveButton": "Сохранить",
+    "lessonCancelEdit": "Отмена",
+    "lessonDeleteButton": "Удалить",
+    "lessonDeleteConfirm": "Удалить этот урок безвозвратно? Прогресс учеников и результаты связанного задания будут удалены.",
+    "lessonDeleteError": "Не удалось удалить урок.",
+    "lessonUpdateError": "Не удалось сохранить урок.",
+    "lessonEditLoadError": "Не удалось загрузить урок для редактирования.",
+    "lessonPublishedLabel": "Опубликован (виден на странице курса)",
+    "lessonRemoveCodingTask": "Убрать практическое задание из урока",
+    "lessonEditCodingTitleTooShort": "Название задания — минимум 2 символа."
   },
   "form": {
     "courseTitle": "Название курса",

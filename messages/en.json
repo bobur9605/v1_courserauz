@@ -322,7 +322,19 @@
     "youtubeInvalid": "Paste a valid YouTube link or video ID.",
     "lessonOrderSaveError": "Could not save lesson order.",
     "lessonCreateError": "Could not create lesson.",
-    "lessonVideoSaveError": "Could not save the video."
+    "lessonVideoSaveError": "Could not save the video.",
+    "lessonEditTitle": "Edit lesson",
+    "lessonEditButton": "Edit",
+    "lessonSaveButton": "Save changes",
+    "lessonCancelEdit": "Cancel",
+    "lessonDeleteButton": "Delete",
+    "lessonDeleteConfirm": "Delete this lesson permanently? Student completions and any linked coding task results will be removed.",
+    "lessonDeleteError": "Could not delete the lesson.",
+    "lessonUpdateError": "Could not save the lesson.",
+    "lessonEditLoadError": "Could not load the lesson for editing.",
+    "lessonPublishedLabel": "Published (visible on the course page)",
+    "lessonRemoveCodingTask": "Remove coding task from this lesson",
+    "lessonEditCodingTitleTooShort": "Coding task title must be at least 2 characters."
   },
   "form": {
     "courseTitle": "Course title",

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
 import type { AssignmentEditorLanguage } from "@/lib/assignmentMode";
 import { youtubeWatchUrl } from "@/lib/youtube";
 
@@ -16,6 +16,19 @@ type LessonRow = {
   youtubeVideoId: string | null;
 };
 
+type EditFormState = {
+  title: string;
+  content: string;
+  youtubeUrl: string;
+  isPublished: boolean;
+  assignmentTitle: string;
+  assignmentInstructions: string;
+  starterCode: string;
+  expectedOutput: string;
+  language: AssignmentEditorLanguage;
+  clearCodingTask: boolean;
+};
+
 export function TeacherLessonsManager({
   courseId,
   lessons,
@@ -24,6 +37,7 @@ export function TeacherLessonsManager({
   lessons: LessonRow[];
 }) {
   const t = useTranslations("teacher");
+  const router = useRouter();
   const initial = useMemo(
     () =>
       [...lessons]
@@ -48,6 +62,8 @@ export function TeacherLessonsManager({
   });
   const [videoEditId, setVideoEditId] = useState<string | null>(null);
   const [videoDraft, setVideoDraft] = useState("");
+  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<EditFormState | null>(null);
 
   async function persistOrder(next: LessonRow[]) {
     setBusy(true);
@@ -148,6 +164,130 @@ export function TeacherLessonsManager({
       ),
     );
     closeVideoEdit();
+  }
+
+  function closeLessonEdit() {
+    setEditingLessonId(null);
+    setEditForm(null);
+  }
+
+  async function openLessonEdit(lessonId: string) {
+    setError(null);
+    setBusy(true);
+    const res = await fetch(`/api/courses/${courseId}/lessons/${lessonId}`);
+    setBusy(false);
+    if (!res.ok) {
+      setError(t("lessonEditLoadError"));
+      return;
+    }
+    const data = (await res.json()) as {
+      title: string;
+      content: string | null;
+      isPublished: boolean;
+      youtubeVideoId: string | null;
+      assignment: null | {
+        title: string;
+        instructions: string;
+        starterCode: string;
+        expectedOutput: string;
+        language: string;
+      };
+    };
+    closeVideoEdit();
+    setEditingLessonId(lessonId);
+    setEditForm({
+      title: data.title,
+      content: data.content ?? "",
+      youtubeUrl: data.youtubeVideoId
+        ? youtubeWatchUrl(data.youtubeVideoId)
+        : "",
+      isPublished: data.isPublished,
+      assignmentTitle: data.assignment?.title ?? "",
+      assignmentInstructions: data.assignment?.instructions ?? "",
+      starterCode: data.assignment?.starterCode ?? "",
+      expectedOutput: data.assignment?.expectedOutput ?? "",
+      language: (data.assignment?.language as AssignmentEditorLanguage) ?? "javascript",
+      clearCodingTask: false,
+    });
+  }
+
+  async function saveLessonEdit(lessonId: string) {
+    if (!editForm || editForm.title.trim().length < 2) return;
+    setBusy(true);
+    setError(null);
+    const youtubeUrl =
+      editForm.youtubeUrl.trim() === "" ? null : editForm.youtubeUrl.trim();
+    const payload: Record<string, unknown> = {
+      title: editForm.title.trim(),
+      content: editForm.content,
+      isPublished: editForm.isPublished,
+      youtubeUrl,
+    };
+    if (editForm.clearCodingTask) {
+      payload.clearCodingTask = true;
+    } else {
+      const withAssignment =
+        editForm.assignmentTitle.trim().length > 0 ||
+        editForm.starterCode.trim().length > 0 ||
+        editForm.expectedOutput.trim().length > 0;
+      if (withAssignment) {
+        if (editForm.assignmentTitle.trim().length < 2) {
+          setBusy(false);
+          setError(t("lessonEditCodingTitleTooShort"));
+          return;
+        }
+        payload.codingTask = {
+          title: editForm.assignmentTitle.trim(),
+          instructions: editForm.assignmentInstructions,
+          starterCode: editForm.starterCode,
+          expectedOutput: editForm.expectedOutput,
+          language: editForm.language,
+        };
+      }
+    }
+    const res = await fetch(`/api/courses/${courseId}/lessons/${lessonId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    setBusy(false);
+    if (!res.ok) {
+      const payloadJson = (await res.json().catch(() => null)) as
+        | { error?: string }
+        | null;
+      if (payloadJson?.error === "invalid_youtube_url") {
+        setError(t("youtubeInvalid"));
+      } else {
+        setError(t("lessonUpdateError"));
+      }
+      return;
+    }
+    const updated = (await res.json()) as LessonRow;
+    setRows((prev) =>
+      [...prev.map((r) => (r.id === lessonId ? { ...r, ...updated, youtubeVideoId: updated.youtubeVideoId ?? null } : r))].sort(
+        (a, b) => a.order - b.order,
+      ),
+    );
+    closeLessonEdit();
+    router.refresh();
+  }
+
+  async function deleteLesson(lessonId: string) {
+    if (!window.confirm(t("lessonDeleteConfirm"))) return;
+    setBusy(true);
+    setError(null);
+    const res = await fetch(`/api/courses/${courseId}/lessons/${lessonId}`, {
+      method: "DELETE",
+    });
+    setBusy(false);
+    if (!res.ok) {
+      setError(t("lessonDeleteError"));
+      return;
+    }
+    setRows((prev) => prev.filter((r) => r.id !== lessonId));
+    if (editingLessonId === lessonId) closeLessonEdit();
+    if (videoEditId === lessonId) closeVideoEdit();
+    router.refresh();
   }
 
   async function createLesson() {
@@ -344,15 +484,186 @@ export function TeacherLessonsManager({
                   </div>
                 </div>
               ) : null}
+              {editingLessonId === lesson.id && editForm ? (
+                <div className="mt-4 w-full max-w-2xl space-y-3 rounded-lg border border-[#dfe3e8] bg-[#f9fafb] p-4">
+                  <h4 className="text-xs font-bold uppercase tracking-wide text-[#6a6f73]">
+                    {t("lessonEditTitle")}
+                  </h4>
+                  <input
+                    className="w-full rounded-md border border-[#d1d5db] px-3 py-2 text-sm"
+                    value={editForm.title}
+                    onChange={(e) =>
+                      setEditForm((p) => (p ? { ...p, title: e.target.value } : p))
+                    }
+                    placeholder={t("lessonTitlePlaceholder")}
+                  />
+                  <textarea
+                    className="min-h-[100px] w-full rounded-md border border-[#d1d5db] px-3 py-2 text-sm"
+                    value={editForm.content}
+                    onChange={(e) =>
+                      setEditForm((p) => (p ? { ...p, content: e.target.value } : p))
+                    }
+                    placeholder={t("lessonContentPlaceholder")}
+                  />
+                  <input
+                    className="w-full rounded-md border border-[#d1d5db] px-3 py-2 text-sm"
+                    value={editForm.youtubeUrl}
+                    onChange={(e) =>
+                      setEditForm((p) => (p ? { ...p, youtubeUrl: e.target.value } : p))
+                    }
+                    placeholder={t("youtubeUrlPlaceholder")}
+                  />
+                  <label className="flex cursor-pointer items-center gap-2 text-sm text-[#1c1d1f]">
+                    <input
+                      type="checkbox"
+                      checked={editForm.isPublished}
+                      onChange={(e) =>
+                        setEditForm((p) =>
+                          p ? { ...p, isPublished: e.target.checked } : p,
+                        )
+                      }
+                      className="rounded border-[#d1d5db]"
+                    />
+                    {t("lessonPublishedLabel")}
+                  </label>
+                  {lesson.assignmentId ? (
+                    <label className="flex cursor-pointer items-center gap-2 text-sm text-[#b45309]">
+                      <input
+                        type="checkbox"
+                        checked={editForm.clearCodingTask}
+                        onChange={(e) =>
+                          setEditForm((p) =>
+                            p ? { ...p, clearCodingTask: e.target.checked } : p,
+                          )
+                        }
+                        className="rounded border-[#d1d5db]"
+                      />
+                      {t("lessonRemoveCodingTask")}
+                    </label>
+                  ) : null}
+                  <div
+                    className={
+                      editForm.clearCodingTask ? "pointer-events-none opacity-50" : ""
+                    }
+                  >
+                    <input
+                      className="mb-2 w-full rounded-md border border-[#d1d5db] px-3 py-2 text-sm"
+                      value={editForm.assignmentTitle}
+                      onChange={(e) =>
+                        setEditForm((p) =>
+                          p ? { ...p, assignmentTitle: e.target.value } : p,
+                        )
+                      }
+                      placeholder={t("lessonCodingTitlePlaceholder")}
+                      disabled={editForm.clearCodingTask}
+                    />
+                    <textarea
+                      className="mb-2 min-h-[80px] w-full rounded-md border border-[#d1d5db] px-3 py-2 text-sm"
+                      value={editForm.assignmentInstructions}
+                      onChange={(e) =>
+                        setEditForm((p) =>
+                          p ? { ...p, assignmentInstructions: e.target.value } : p,
+                        )
+                      }
+                      placeholder={t("lessonCodingInstructionsPlaceholder")}
+                      disabled={editForm.clearCodingTask}
+                    />
+                    <textarea
+                      className="mb-2 min-h-[80px] w-full rounded-md border border-[#d1d5db] px-3 py-2 font-mono text-sm"
+                      value={editForm.starterCode}
+                      onChange={(e) =>
+                        setEditForm((p) =>
+                          p ? { ...p, starterCode: e.target.value } : p,
+                        )
+                      }
+                      placeholder={t("lessonStarterPlaceholder")}
+                      disabled={editForm.clearCodingTask}
+                    />
+                    <label className="mb-2 grid gap-1 text-sm text-[#1c1d1f]">
+                      <span className="font-semibold">{t("lessonEditorLanguage")}</span>
+                      <select
+                        className="rounded-md border border-[#d1d5db] px-3 py-2 text-sm"
+                        value={editForm.language}
+                        onChange={(e) =>
+                          setEditForm((p) =>
+                            p
+                              ? {
+                                  ...p,
+                                  language: e.target.value as AssignmentEditorLanguage,
+                                }
+                              : p,
+                          )
+                        }
+                        disabled={editForm.clearCodingTask}
+                      >
+                        <option value="javascript">JavaScript</option>
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                      </select>
+                    </label>
+                    <textarea
+                      className="min-h-[80px] w-full rounded-md border border-[#d1d5db] px-3 py-2 font-mono text-sm"
+                      value={editForm.expectedOutput}
+                      onChange={(e) =>
+                        setEditForm((p) =>
+                          p ? { ...p, expectedOutput: e.target.value } : p,
+                        )
+                      }
+                      placeholder={t("lessonExpectedOutputPlaceholder")}
+                      disabled={editForm.clearCodingTask}
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button
+                      type="button"
+                      disabled={busy || editForm.title.trim().length < 2}
+                      onClick={() => void saveLessonEdit(lesson.id)}
+                      className="rounded-md bg-[#0056d2] px-4 py-2 text-sm font-semibold text-white hover:bg-[#00419e] disabled:opacity-60"
+                    >
+                      {t("lessonSaveButton")}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={closeLessonEdit}
+                      className="rounded-md border border-[#e0e0e0] px-4 py-2 text-sm font-semibold text-[#1c1d1f] hover:bg-white disabled:opacity-60"
+                    >
+                      {t("lessonCancelEdit")}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 disabled={busy}
-                onClick={() => openVideoEdit(lesson)}
+                onClick={() => {
+                  closeLessonEdit();
+                  openVideoEdit(lesson);
+                }}
                 className="text-sm font-semibold text-[#0056d2] hover:underline disabled:opacity-60"
               >
                 {lesson.youtubeVideoId ? t("videoEdit") : t("videoAttach")}
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  closeVideoEdit();
+                  void openLessonEdit(lesson.id);
+                }}
+                className="text-sm font-semibold text-[#0056d2] hover:underline disabled:opacity-60"
+              >
+                {t("lessonEditButton")}
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void deleteLesson(lesson.id)}
+                className="text-sm font-semibold text-red-600 hover:underline disabled:opacity-60"
+              >
+                {t("lessonDeleteButton")}
               </button>
               <button
                 type="button"

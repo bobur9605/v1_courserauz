@@ -322,7 +322,19 @@
     "youtubeInvalid": "YouTube havolasi yoki video ID kiriting.",
     "lessonOrderSaveError": "Darslar tartibi saqlanmadi.",
     "lessonCreateError": "Dars yaratilmadi.",
-    "lessonVideoSaveError": "Video saqlanmadi."
+    "lessonVideoSaveError": "Video saqlanmadi.",
+    "lessonEditTitle": "Darsni tahrirlash",
+    "lessonEditButton": "Tahrirlash",
+    "lessonSaveButton": "O‘zgarishlarni saqlash",
+    "lessonCancelEdit": "Bekor qilish",
+    "lessonDeleteButton": "O‘chirish",
+    "lessonDeleteConfirm": "Bu darsni butunlay o‘chirasizmi? Talabalar yakunlari va bog‘langan topshiriq natijalari ham o‘chiriladi.",
+    "lessonDeleteError": "Dars o‘chirilmadi.",
+    "lessonUpdateError": "Dars saqlanmadi.",
+    "lessonEditLoadError": "Tahrirlash uchun dars yuklanmadi.",
+    "lessonPublishedLabel": "Nashr etilgan (kurs sahifasida ko‘rinadi)",
+    "lessonRemoveCodingTask": "Bu darsdan kodlash topshirig‘ini olib tashlash",
+    "lessonEditCodingTitleTooShort": "Topshiriq sarlavhasi kamida 2 belgi bo‘lishi kerak."
   },
   "form": {
     "courseTitle": "Kurs nomi",
