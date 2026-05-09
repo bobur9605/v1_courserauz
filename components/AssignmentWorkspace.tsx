@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useRouter } from "@/i18n/routing";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { normalizeOutput } from "@/lib/normalizeOutput";
 import {
   assignmentEditorFileName,
@@ -67,6 +67,17 @@ export function AssignmentWorkspace({
   const [latestScore, setLatestScore] = useState<number | null>(
     existingScore ?? null,
   );
+  /** Transient toast after "Run" (success / failure / runtime error). */
+  const [runToast, setRunToast] = useState<{
+    variant: "success" | "error";
+    message: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!runToast) return;
+    const id = window.setTimeout(() => setRunToast(null), 4000);
+    return () => window.clearTimeout(id);
+  }, [runToast]);
 
   const options = useMemo(
     () => ({
@@ -85,7 +96,12 @@ export function AssignmentWorkspace({
     if (editorLanguage !== "javascript") {
       const text = normalizeOutput(code);
       setOutput(text);
-      setLastPass(text === normalizeOutput(expectedOutput));
+      const pass = text === normalizeOutput(expectedOutput);
+      setLastPass(pass);
+      setRunToast({
+        variant: pass ? "success" : "error",
+        message: pass ? t("pass") : t("fail"),
+      });
       return;
     }
     const logs: string[] = [];
@@ -103,14 +119,21 @@ export function AssignmentWorkspace({
       fn(sandbox.console);
       const text = logs.join("\n").trim();
       setOutput(text);
-      setLastPass(normalizeOutput(text) === normalizeOutput(expectedOutput));
+      const pass =
+        normalizeOutput(text) === normalizeOutput(expectedOutput);
+      setLastPass(pass);
+      setRunToast({
+        variant: pass ? "success" : "error",
+        message: pass ? t("pass") : t("fail"),
+      });
     } catch (e: unknown) {
       const err = e instanceof Error ? e.message : String(e);
       setOutput(logs.join("\n"));
       setMsg(err);
       setLastPass(false);
+      setRunToast({ variant: "error", message: err });
     }
-  }, [code, editorLanguage, expectedOutput]);
+  }, [code, editorLanguage, expectedOutput, t]);
 
   const submit = useCallback(async () => {
     setBusy(true);
@@ -156,7 +179,24 @@ export function AssignmentWorkspace({
   }, [assignmentId, code, locale, router, t]);
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+    <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+      {runToast ? (
+        <div
+          className="pointer-events-none fixed bottom-6 left-1/2 z-[100] flex max-w-[min(100vw-2rem,28rem)] -translate-x-1/2 justify-center px-4"
+          role="status"
+          aria-live="polite"
+        >
+          <div
+            className={`pointer-events-auto rounded-lg border px-4 py-3 text-sm font-semibold shadow-lg ${
+              runToast.variant === "success"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+                : "border-amber-200 bg-amber-50 text-amber-950"
+            }`}
+          >
+            {runToast.message}
+          </div>
+        </div>
+      ) : null}
       <section className="flex flex-col gap-3">
         <div className="overflow-hidden rounded-xl border border-[#dfe3e8] bg-white shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eceff3] bg-[#f9fafb] px-4 py-2.5">

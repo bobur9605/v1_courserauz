@@ -28,12 +28,15 @@ export function inferAssignmentLanguageFromContent(
   starterCode: string,
   expectedOutput = "",
 ): AssignmentEditorLanguage | null {
-  const combined = `${starterCode}\n${expectedOutput}`;
-  if (matchesAnyPattern(combined, HTML_TASK_PATTERNS)) return "html";
-  if (matchesAnyPattern(combined, CSS_TASK_PATTERNS)) return "css";
+  // Prefer JavaScript when the editor source clearly uses JS syntax. Otherwise
+  // exercises that embed HTML/CSS inside JS strings are misclassified as HTML/CSS
+  // and the runner compares the whole file to expected output instead of executing code.
   if (matchesAnyPattern(starterCode, LEGACY_JS_TASK_PATTERNS)) {
     return "javascript";
   }
+  const combined = `${starterCode}\n${expectedOutput}`;
+  if (matchesAnyPattern(combined, HTML_TASK_PATTERNS)) return "html";
+  if (matchesAnyPattern(combined, CSS_TASK_PATTERNS)) return "css";
   return null;
 }
 
