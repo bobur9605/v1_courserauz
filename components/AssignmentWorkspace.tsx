@@ -88,36 +88,7 @@ export function AssignmentWorkspace({
     [],
   );
 
-  const runLocal = useCallback(() => {
-    if (editorLanguage !== "javascript") {
-      setOutput(normalizeOutput(code));
-      setActionToast({ variant: "success", message: t("runDone") });
-      return;
-    }
-    const logs: string[] = [];
-    const sandbox = {
-      console: {
-        log: (...args: unknown[]) =>
-          logs.push(args.map((a) => String(a)).join(" ")),
-      },
-    };
-    try {
-      const fn = new Function(
-        "console",
-        `"use strict";\n${code}\n`,
-      ) as (c: typeof sandbox.console) => void;
-      fn(sandbox.console);
-      const text = logs.join("\n").trim();
-      setOutput(text);
-      setActionToast({ variant: "success", message: t("runDone") });
-    } catch (e: unknown) {
-      const err = e instanceof Error ? e.message : String(e);
-      setOutput(logs.join("\n"));
-      setActionToast({ variant: "error", message: err });
-    }
-  }, [code, editorLanguage, t]);
-
-  const submit = useCallback(async () => {
+  const checkWithAi = useCallback(async () => {
     setBusy(true);
     try {
       const res = await fetch("/api/submit", {
@@ -213,18 +184,19 @@ export function AssignmentWorkspace({
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[#dfe3e8] bg-[#fbfcfe] px-4 py-3 shadow-sm">
           <button
             type="button"
-            onClick={runLocal}
-            className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-[#0056d2] ring-1 ring-[#0056d2] transition hover:bg-[#eef5ff]"
+            disabled={busy}
+            onClick={() => void checkWithAi()}
+            className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-[#0056d2] ring-1 ring-[#0056d2] transition hover:bg-[#eef5ff] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {t("run")}
+            {busy ? t("checking") : t("run")}
           </button>
           <button
             type="button"
             disabled={busy}
-            onClick={() => void submit()}
+            onClick={() => void checkWithAi()}
             className="rounded-md bg-[#0056d2] px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-[#00419e] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {busy ? t("submitting") : t("submit")}
+            {busy ? t("checking") : t("submit")}
           </button>
         </div>
       </section>
