@@ -7,23 +7,20 @@ import { runStudentCode } from "@/lib/runner";
 import { newId } from "@/lib/ids";
 import { bypassesLessonSequence } from "@/lib/lessonGating";
 import { studentMayAccessLessonOrder } from "@/lib/lessonGatingServer";
-import { usesJavaScriptRunner } from "@/lib/assignmentMode";
+import {
+  resolveAssignmentEditorLanguage,
+  usesJavaScriptRunner,
+} from "@/lib/assignmentMode";
+import {
+  gradeSubmissionWithAi,
+  isAiGradingConfigured,
+} from "@/lib/aiGrader";
 
 const schema = z.object({
   assignmentId: z.string().min(1),
   code: z.string(),
   locale: z.enum(["uz", "en", "ru"]).optional(),
 });
-
-function mismatchFeedback(locale: "uz" | "en" | "ru", expected: string, got: string) {
-  if (locale === "uz") {
-    return `Kutilgan natija:\n${expected}\n\nSizning natijangiz:\n${got}`;
-  }
-  if (locale === "ru") {
-    return `Ожидаемый результат:\n${expected}\n\nВаш результат:\n${got}`;
-  }
-  return `Expected output:\n${expected}\n\nYour output:\n${got}`;
-}
 
 function runtimeFeedback(locale: "uz" | "en" | "ru", error: string) {
   if (locale === "uz") return `Ishga tushirish xatosi:\n${error}`;
@@ -37,13 +34,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
+  if (!isAiGradingConfigured()) {
+    return NextResponse.json({ error: "grader_unavailable" }, { status: 503 });
+  }
+
   try {
     const body = schema.parse(await req.json());
     const locale = body.locale ?? "en";
     const supabase = createAdminClient();
     const { data: assignment, error: aErr } = await supabase
       .from("Assignment")
-      .select("id, expectedOutput, courseId, order, language, lessonId, starterCode")
+      .select(
+        "id, title, instructions, expectedOutput, courseId, order, language, lessonId, starterCode",
+      )
       .eq("id", body.assignmentId)
       .maybeSingle();
     if (aErr || !assignment) {
@@ -73,6 +76,12 @@ export async function POST(req: Request) {
     ) {
       return NextResponse.json({ error: "sequence_locked" }, { status: 403 });
     }
+    const editorLanguage = resolveAssignmentEditorLanguage(
+      assignment.language,
+      assignment.starterCode,
+      assignment.expectedOutput,
+      courseTitle,
+    );
     const runAsJavaScript = usesJavaScriptRunner(
       assignment.language,
       assignment.starterCode,
@@ -97,21 +106,34 @@ export async function POST(req: Request) {
         ? runStudentCode(body.code)
         : { ok: true, stdout: normalizeOutput(body.code), error: undefined };
     const { stdout, ok, error } = execution;
-    const expected = normalizeOutput(assignment.expectedOutput);
-    const got = runAsJavaScript
+    const studentOutput = runAsJavaScript
       ? normalizeOutput(stdout)
       : normalizeMarkupOutput(stdout);
-    const passed = ok && got === expected;
-    const score = passed ? 100 : ok ? 40 : 0;
-    const feedback = passed
-      ? null
-      : error
-        ? runtimeFeedback(locale, error)
-        : mismatchFeedback(
-            locale,
-            expected,
-            runAsJavaScript ? got : normalizeOutput(stdout),
-          );
+
+    let passed: boolean;
+    let score: number;
+    let feedback: string | null;
+
+    if (!ok && error) {
+      passed = false;
+      score = 0;
+      feedback = runtimeFeedback(locale, error);
+    } else {
+      const ai = await gradeSubmissionWithAi({
+        title: assignment.title,
+        instructions: assignment.instructions,
+        expectedOutput: assignment.expectedOutput,
+        language: editorLanguage,
+        code: body.code,
+        studentOutput,
+        runtimeError: error,
+        locale,
+      });
+      passed = ai.passed;
+      score = ai.score;
+      feedback = ai.passed ? null : ai.feedback;
+    }
+
     const now = new Date().toISOString();
 
     const { data: prior } = await supabase
@@ -174,7 +196,11 @@ export async function POST(req: Request) {
       error: error ?? null,
       feedback: record.feedback,
     });
-  } catch {
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e);
+    if (message.includes("OPENAI")) {
+      return NextResponse.json({ error: "grader_unavailable" }, { status: 503 });
+    }
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
 }

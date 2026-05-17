@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "@/i18n/routing";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { normalizeMarkupOutput, normalizeOutput } from "@/lib/normalizeOutput";
+import { normalizeOutput } from "@/lib/normalizeOutput";
 import {
   assignmentEditorFileName,
   type AssignmentEditorLanguage,
@@ -28,7 +28,6 @@ const Monaco = dynamic(() => import("@monaco-editor/react").then((m) => m.defaul
 type Props = {
   assignmentId: string;
   starterCode: string;
-  expectedOutput: string;
   initialCode?: string;
   /** Last saved program output (from Result.stdout) so Natija matches the last grade. */
   initialStdout?: string | null;
@@ -40,7 +39,6 @@ type Props = {
 export function AssignmentWorkspace({
   assignmentId,
   starterCode,
-  expectedOutput,
   initialCode,
   initialStdout,
   existingScore,
@@ -92,14 +90,8 @@ export function AssignmentWorkspace({
 
   const runLocal = useCallback(() => {
     if (editorLanguage !== "javascript") {
-      const text = normalizeOutput(code);
-      setOutput(text);
-      const pass =
-        normalizeMarkupOutput(code) === normalizeOutput(expectedOutput);
-      setActionToast({
-        variant: pass ? "success" : "error",
-        message: pass ? t("pass") : t("fail"),
-      });
+      setOutput(normalizeOutput(code));
+      setActionToast({ variant: "success", message: t("runDone") });
       return;
     }
     const logs: string[] = [];
@@ -117,18 +109,13 @@ export function AssignmentWorkspace({
       fn(sandbox.console);
       const text = logs.join("\n").trim();
       setOutput(text);
-      const pass =
-        normalizeOutput(text) === normalizeOutput(expectedOutput);
-      setActionToast({
-        variant: pass ? "success" : "error",
-        message: pass ? t("pass") : t("fail"),
-      });
+      setActionToast({ variant: "success", message: t("runDone") });
     } catch (e: unknown) {
       const err = e instanceof Error ? e.message : String(e);
       setOutput(logs.join("\n"));
       setActionToast({ variant: "error", message: err });
     }
-  }, [code, editorLanguage, expectedOutput, t]);
+  }, [code, editorLanguage, t]);
 
   const submit = useCallback(async () => {
     setBusy(true);
@@ -151,6 +138,7 @@ export function AssignmentWorkspace({
         else if (data.error === "forbidden") message = t("needEnroll");
         else if (data.error === "not_found") message = t("notFound");
         else if (data.error === "sequence_locked") message = t("sequenceLocked");
+        else if (data.error === "grader_unavailable") message = t("graderUnavailable");
         setActionToast({ variant: "error", message });
         setBusy(false);
         return;
@@ -164,7 +152,8 @@ export function AssignmentWorkspace({
           message: t("submitted", { score: String(data.score ?? 0) }),
         });
       } else {
-        setActionToast({ variant: "error", message: t("fail") });
+        const failMessage = data.feedback?.trim() || t("fail");
+        setActionToast({ variant: "error", message: failMessage });
       }
       router.refresh();
     } catch {
@@ -235,7 +224,7 @@ export function AssignmentWorkspace({
             onClick={() => void submit()}
             className="rounded-md bg-[#0056d2] px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-[#00419e] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {t("submit")}
+            {busy ? t("submitting") : t("submit")}
           </button>
         </div>
       </section>
@@ -243,18 +232,9 @@ export function AssignmentWorkspace({
       <section className="flex flex-col gap-4">
         <div className="rounded-xl border border-[#dfe3e8] bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#6a6f73]">
-            {t("expected")}
-          </p>
-          <pre className="mt-2 min-h-[92px] whitespace-pre-wrap rounded-md bg-[#f5f7fa] p-3 text-sm text-[#111827]">
-            {expectedOutput}
-          </pre>
-        </div>
-
-        <div className="rounded-xl border border-[#dfe3e8] bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#6a6f73]">
             {t("output")}
           </p>
-          <pre className="mt-2 min-h-[220px] whitespace-pre-wrap rounded-md bg-[#07112a] p-3 text-sm text-emerald-100">
+          <pre className="mt-2 min-h-[320px] whitespace-pre-wrap rounded-md bg-[#07112a] p-3 text-sm text-emerald-100">
             {output || "—"}
           </pre>
         </div>

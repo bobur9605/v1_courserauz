@@ -129,7 +129,6 @@ export default async function LessonPage(props: Props) {
             <AssignmentWorkspace
               assignmentId={assignment.id}
               starterCode={assignment.starterCode}
-              expectedOutput={assignment.expectedOutput}
               initialCode={result?.submittedCode}
               initialStdout={result?.stdout}
               existingScore={result?.score}
