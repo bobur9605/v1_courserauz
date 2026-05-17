@@ -1,4 +1,3 @@
-import OpenAI from "openai";
 import { z } from "zod";
 import type { AssignmentEditorLanguage } from "./assignmentMode";
 
@@ -48,7 +47,6 @@ export async function gradeSubmissionWithAi(
     throw new Error("OPENAI_API_KEY is not configured");
   }
 
-  const client = new OpenAI({ apiKey });
   const model = process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini";
   const feedbackLanguage = LOCALE_NAMES[input.locale];
 
@@ -77,17 +75,34 @@ Student output / submitted content:
 ${truncate(input.studentOutput, MAX_OUTPUT_CHARS)}
 ${input.runtimeError ? `\nRuntime error:\n${input.runtimeError}` : ""}`;
 
-  const completion = await client.chat.completions.create({
-    model,
-    temperature: 0.2,
-    response_format: { type: "json_object" },
-    messages: [
-      { role: "system", content: system },
-      { role: "user", content: user },
-    ],
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      temperature: 0.2,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+    }),
   });
 
-  const raw = completion.choices[0]?.message?.content;
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(
+      `OpenAI API error ${res.status}${detail ? `: ${detail.slice(0, 200)}` : ""}`,
+    );
+  }
+
+  const payload = (await res.json()) as {
+    choices?: Array<{ message?: { content?: string | null } }>;
+  };
+  const raw = payload.choices?.[0]?.message?.content;
   if (!raw) {
     throw new Error("Empty response from OpenAI");
   }
