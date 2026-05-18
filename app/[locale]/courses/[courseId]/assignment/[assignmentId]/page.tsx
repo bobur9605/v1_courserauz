@@ -65,7 +65,7 @@ export default async function AssignmentPage(props: Props) {
   const { data: result } = session
     ? await supabase
         .from("Result")
-        .select("submittedCode, stdout, score, passed, feedback")
+        .select("submittedCode, stdout, score, passed, feedback, aiReport, updatedAt")
         .eq("studentId", session.sub)
         .eq("assignmentId", row.id)
         .maybeSingle()
@@ -97,11 +97,14 @@ export default async function AssignmentPage(props: Props) {
 
       {session ? (
         <AssignmentWorkspace
+          key={result?.updatedAt ?? "no-result"}
           assignmentId={row.id}
           starterCode={row.starterCode}
           initialCode={result?.submittedCode}
           initialStdout={result?.stdout}
+          initialAiReport={result?.aiReport}
           existingScore={result?.score}
+          existingPassed={result?.passed}
           existingFeedback={result?.feedback}
           editorLanguage={editorLanguage}
         />

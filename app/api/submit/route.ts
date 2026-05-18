@@ -113,6 +113,8 @@ export async function POST(req: Request) {
     let passed: boolean;
     let score: number;
     let feedback: string | null;
+    let aiReport: { comments: string; issues: string[]; positives: string[] } | null =
+      null;
 
     if (!ok && error) {
       passed = false;
@@ -132,6 +134,7 @@ export async function POST(req: Request) {
       passed = ai.passed;
       score = ai.score;
       feedback = ai.passed ? null : ai.feedback;
+      aiReport = ai.report;
     }
 
     const now = new Date().toISOString();
@@ -152,10 +155,11 @@ export async function POST(req: Request) {
           passed,
           score,
           feedback,
+          aiReport,
           updatedAt: now,
         })
         .eq("id", prior.id)
-        .select("score, feedback")
+        .select("score, feedback, aiReport")
         .single();
       if (uErr || !record) {
         return NextResponse.json({ error: "bad_request" }, { status: 400 });
@@ -166,6 +170,7 @@ export async function POST(req: Request) {
         stdout,
         error: error ?? null,
         feedback: record.feedback,
+        aiReport: record.aiReport,
       });
     }
 
@@ -180,10 +185,11 @@ export async function POST(req: Request) {
         passed,
         score,
         feedback,
+        aiReport,
         createdAt: now,
         updatedAt: now,
       })
-      .select("score, feedback")
+      .select("score, feedback, aiReport")
       .single();
     if (iErr || !record) {
       return NextResponse.json({ error: "bad_request" }, { status: 400 });
@@ -195,6 +201,7 @@ export async function POST(req: Request) {
       stdout,
       error: error ?? null,
       feedback: record.feedback,
+      aiReport: record.aiReport,
     });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : String(e);

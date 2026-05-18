@@ -1,13 +1,22 @@
 import { z } from "zod";
 import type { AssignmentEditorLanguage } from "./assignmentMode";
+import type { AiReport } from "./aiReportTypes";
 
 const gradeSchema = z.object({
   passed: z.boolean(),
   score: z.number().min(0).max(100),
   feedback: z.string(),
+  comments: z.string().optional().default(""),
+  issues: z.array(z.string()).optional().default([]),
+  positives: z.array(z.string()).optional().default([]),
 });
 
-export type AiGradeResult = z.infer<typeof gradeSchema>;
+export type AiGradeResult = {
+  passed: boolean;
+  score: number;
+  feedback: string;
+  report: AiReport;
+};
 
 export type GradeSubmissionInput = {
   title: string;
@@ -51,13 +60,19 @@ export async function gradeSubmissionWithAi(
   const feedbackLanguage = LOCALE_NAMES[input.locale];
 
   const system = `You grade coding exercises for an online learning platform.
-Return ONLY valid JSON with keys: passed (boolean), score (integer 0-100), feedback (string).
-Write feedback in ${feedbackLanguage}.
-Pass only when the student's work fully satisfies the instructions and matches the reference solution in meaning.
-For HTML/CSS, equivalent markup passes (attribute order, extra whitespace, or harmless comments may differ).
-For JavaScript, the program output must match the reference unless instructions allow equivalent answers.
-Do not reveal the full reference solution in feedback. Give short, constructive hints when failing.
-If there is a runtime error, passed must be false and score should be 0 or very low.`;
+Return ONLY valid JSON with these keys:
+- passed (boolean): true only when the work fully satisfies the instructions and matches the reference in meaning.
+- score (integer 0-100)
+- feedback (string): one or two short sentences for a toast notification (same language as below).
+- comments (string): a clear paragraph explaining what you checked and how the student did (for the result panel).
+- issues (array of strings): each item is one specific problem or missing requirement (red flags). Use [] if none.
+- positives (array of strings): each item is one specific thing done well (green flags). If passed is true, include at least one item.
+
+Write all human-readable strings in ${feedbackLanguage}.
+For HTML/CSS, equivalent markup passes (attribute order, whitespace, harmless comments may differ).
+For JavaScript, program output must match the reference unless instructions allow equivalents.
+Do not paste the full reference solution. Be constructive.
+If there is a runtime error, passed must be false, score near 0, issues should mention the error, positives may be [].`;
 
   const user = `Assignment title: ${input.title}
 Editor language: ${input.language}
@@ -119,9 +134,19 @@ ${input.runtimeError ? `\nRuntime error:\n${input.runtimeError}` : ""}`;
     throw new Error("OpenAI response failed validation");
   }
 
+  const d = result.data;
+  const fb = d.feedback.trim();
+  const cm = (d.comments ?? "").trim() || fb;
+  const report: AiReport = {
+    comments: cm,
+    issues: (d.issues ?? []).map((s) => s.trim()).filter(Boolean).slice(0, 12),
+    positives: (d.positives ?? []).map((s) => s.trim()).filter(Boolean).slice(0, 12),
+  };
+
   return {
-    passed: result.data.passed,
-    score: Math.round(result.data.score),
-    feedback: result.data.feedback.trim(),
+    passed: d.passed,
+    score: Math.round(d.score),
+    feedback: fb,
+    report,
   };
 }
